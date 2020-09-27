@@ -1,9 +1,12 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:todo/model/task_elem.dart';
+import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
 import 'package:todo/ui/page_newlist.dart';
+
+///TaskPage, 可以查看当前未完成的task,
+///由上方的工具栏[toolBar], 标题[header], AddList按钮[addListBtn], 和任务卡片构成[]
 
 class TaskPage extends StatefulWidget {
   TaskPage({Key key}) : super(key: key);
@@ -31,68 +34,185 @@ class _TaskPageState extends State<TaskPage>
     super.dispose();
   }
 
-  void _addTaskPressed() async {
-    Navigator.of(context).push(
-      new PageRouteBuilder(
-        pageBuilder: (_, __, ___) => NewListPage(),
-        transitionsBuilder: (context, animation, secondaryAnimation, child) =>
-            new ScaleTransition(
-          scale: new Tween<double>(
-            begin: 1.5,
-            end: 1.0,
-          ).animate(
-            CurvedAnimation(
-              parent: animation,
-              curve: Interval(
-                0.50,
-                1.00,
-                curve: Curves.linear,
-              ),
-            ),
-          ),
-          child: ScaleTransition(
-            scale: Tween<double>(
-              begin: 0.0,
-              end: 1.0,
-            ).animate(
-              CurvedAnimation(
-                parent: animation,
-                curve: Interval(
-                  0.00,
-                  0.50,
-                  curve: Curves.linear,
-                ),
-              ),
-            ),
-            child: child,
-          ),
-        ),
-      ),
-    );
-  }
+  // void _addTaskPressed() async {
+  //   Navigator.of(context).push(
+  //     new PageRouteBuilder(
+  //       pageBuilder: (_, __, ___) => NewListPage(),
+  //       transitionsBuilder: (context, animation, secondaryAnimation, child) =>
+  //           new ScaleTransition(
+  //         scale: new Tween<double>(
+  //           begin: 1.5,
+  //           end: 1.0,
+  //         ).animate(
+  //           CurvedAnimation(
+  //             parent: animation,
+  //             curve: Interval(
+  //               0.50,
+  //               1.00,
+  //               curve: Curves.linear,
+  //             ),
+  //           ),
+  //         ),
+  //         child: ScaleTransition(
+  //           scale: Tween<double>(
+  //             begin: 0.0,
+  //             end: 1.0,
+  //           ).animate(
+  //             CurvedAnimation(
+  //               parent: animation,
+  //               curve: Interval(
+  //                 0.00,
+  //                 0.50,
+  //                 curve: Curves.linear,
+  //               ),
+  //             ),
+  //           ),
+  //           child: child,
+  //         ),
+  //       ),
+  //     ),
+  //   );
+  // }
 
-  Padding _getToolbar(BuildContext context) {
-    return new Padding(
-      padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
-      child: new Row(
-        mainAxisAlignment: MainAxisAlignment.center,
-        children: [
-          new Image(
-            width: 40.0,
-            height: 40.0,
-            fit: BoxFit.cover,
-            image: new AssetImage('assets/list.png'),
-          ),
-        ],
-      ),
-    );
-  }
+  Widget toolBar = Builder(
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
+        child: new Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            new Image(
+              width: 40.0,
+              height: 40.0,
+              fit: BoxFit.cover,
+              image: new AssetImage('assets/list.png'),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  Widget header = Builder(
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(top: 50),
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          crossAxisAlignment: CrossAxisAlignment.center,
+          children: [
+            Expanded(
+              flex: 1,
+              child: Container(
+                color: Colors.grey,
+                height: 1.5,
+              ),
+            ),
+            Expanded(
+              flex: 2,
+              child: Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: <Widget>[
+                  Text(
+                    'Task',
+                    style:
+                        TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
+                  ),
+                  Text(
+                    'Lists',
+                    style: TextStyle(fontSize: 28.0, color: Colors.grey),
+                  )
+                ],
+              ),
+            ),
+            Expanded(
+              flex: 1,
+              child: Container(
+                color: Colors.grey,
+                height: 1.5,
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
+
+  Widget addListBtn = Builder(
+    builder: (context) {
+      return Padding(
+        padding: EdgeInsets.only(top: 50.0),
+        child: Column(
+          children: <Widget>[
+            Container(
+              width: 50.0,
+              height: 50.0,
+              decoration: BoxDecoration(
+                  border: Border.all(color: Colors.black38),
+                  borderRadius: BorderRadius.all(Radius.circular(7.0))),
+              child: IconButton(
+                icon: Icon(Icons.add),
+                iconSize: 30.0,
+                onPressed: () async {
+                  Navigator.of(context).push(
+                    PageRouteBuilder(
+                      pageBuilder: (_, __, ___) => NewListPage(),
+                      transitionsBuilder:
+                          (context, animation, secondaryAnimation, child) =>
+                              new ScaleTransition(
+                        scale: new Tween<double>(
+                          begin: 1.5,
+                          end: 1.0,
+                        ).animate(
+                          CurvedAnimation(
+                            parent: animation,
+                            curve: Interval(
+                              0.50,
+                              1.00,
+                              curve: Curves.linear,
+                            ),
+                          ),
+                        ),
+                        child: ScaleTransition(
+                          scale: Tween<double>(
+                            begin: 0.0,
+                            end: 1.0,
+                          ).animate(
+                            CurvedAnimation(
+                              parent: animation,
+                              curve: Interval(
+                                0.00,
+                                0.50,
+                                curve: Curves.linear,
+                              ),
+                            ),
+                          ),
+                          child: child,
+                        ),
+                      ),
+                    ),
+                  );
+                },
+              ),
+            ),
+            Padding(
+              padding: EdgeInsets.only(top: 10),
+              child: Text(
+                'Add List',
+                style: TextStyle(color: Colors.black45),
+              ),
+            ),
+          ],
+        ),
+      );
+    },
+  );
 
   getExistItems() {
-    List<TaskElem> taskElems = List();
+    List<Task> taskElems = List();
     List<TaskList> taskList = List();
 
-    Map<String, List<TaskElem>> DB = Map(); // <TaskList, Tasks>
+    Map<String, List<Task>> DB = Map(); // <TaskList, Tasks>
 
     Column getinfo(var index) {
       return Column(
@@ -120,7 +240,7 @@ class _TaskPageState extends State<TaskPage>
                     ),
                     Flexible(
                       child: Text(
-                        DB.values.elementAt(index).elementAt(i).name,
+                        DB.values.elementAt(index).elementAt(i).taskName,
                         style: DB.values.elementAt(index).elementAt(i).state
                             ? TextStyle(
                                 decoration: TextDecoration.lineThrough,
@@ -154,7 +274,7 @@ class _TaskPageState extends State<TaskPage>
                 Radius.circular(8.0),
               ),
             ),
-            color: Color(int.parse(taskList[index].color)),
+            color: taskList[index].color,
             child: Container(
               width: 220.0,
               child: Column(
@@ -209,76 +329,11 @@ class _TaskPageState extends State<TaskPage>
     return Scaffold(
       body: ListView(
         children: [
-          _getToolbar(context),
           Column(
             children: [
-              Padding(
-                padding: EdgeInsets.only(top: 50),
-                child: Row(
-                  mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    Expanded(
-                      flex: 1,
-                      child: Container(
-                        color: Colors.grey,
-                        height: 1.5,
-                      ),
-                    ),
-                    Expanded(
-                      flex: 2,
-                      child: Row(
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: <Widget>[
-                          Text(
-                            'Task',
-                            style: TextStyle(
-                                fontSize: 30.0, fontWeight: FontWeight.bold),
-                          ),
-                          Text(
-                            'Lists',
-                            style:
-                                TextStyle(fontSize: 28.0, color: Colors.grey),
-                          )
-                        ],
-                      ),
-                    ),
-                    Expanded(
-                      flex: 1,
-                      child: Container(
-                        color: Colors.grey,
-                        height: 1.5,
-                      ),
-                    ),
-                  ],
-                ),
-              ),
-              Padding(
-                padding: EdgeInsets.only(top: 50.0),
-                child: Column(
-                  children: <Widget>[
-                    Container(
-                      width: 50.0,
-                      height: 50.0,
-                      decoration: BoxDecoration(
-                          border: Border.all(color: Colors.black38),
-                          borderRadius: BorderRadius.all(Radius.circular(7.0))),
-                      child: IconButton(
-                        icon: Icon(Icons.add),
-                        onPressed: _addTaskPressed,
-                        iconSize: 30.0,
-                      ),
-                    ),
-                    Padding(
-                      padding: EdgeInsets.only(top: 10),
-                      child: Text(
-                        'Add List',
-                        style: TextStyle(color: Colors.black45),
-                      ),
-                    ),
-                  ],
-                ),
-              ),
+              toolBar,
+              header,
+              addListBtn,
             ],
           ),
           Padding(

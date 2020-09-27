@@ -5,6 +5,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:todo/ui/page_done.dart';
 import 'package:todo/ui/page_task.dart';
 
+///主界面, 包括底部导航栏和当前页面, 共有三个页面可以切换, 页面位于[_children].
+
 class HomePage extends StatefulWidget {
   HomePage({Key key}) : super(key: key);
 
