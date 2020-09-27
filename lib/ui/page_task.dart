@@ -6,7 +6,7 @@ import 'package:todo/model/task_list.dart';
 import 'package:todo/ui/page_newlist.dart';
 
 ///TaskPage, 可以查看当前未完成的task,
-///由上方的工具栏[toolBar], 标题[header], AddList按钮[addListBtn], 和任务卡片构成[]
+///由上方的工具栏[toolBar()], 标题[header()], AddList按钮[addListBtn()], 和任务卡片构成[]
 
 class TaskPage extends StatefulWidget {
   TaskPage({Key key}) : super(key: key);
@@ -74,140 +74,137 @@ class _TaskPageState extends State<TaskPage>
   //   );
   // }
 
-  Widget toolBar = Builder(
-    builder: (context) {
-      return Padding(
-        padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
-        child: new Row(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            new Image(
-              width: 40.0,
-              height: 40.0,
-              fit: BoxFit.cover,
-              image: new AssetImage('assets/list.png'),
-            ),
-          ],
-        ),
-      );
-    },
-  );
+  Widget toolBar(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
+      child: new Row(
+        mainAxisAlignment: MainAxisAlignment.center,
+        children: [
+          new Image(
+            width: 40.0,
+            height: 40.0,
+            fit: BoxFit.cover,
+            image: new AssetImage('assets/list.png'),
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget header = Builder(
-    builder: (context) {
-      return Padding(
-        padding: EdgeInsets.only(top: 50),
-        child: Row(
-          mainAxisAlignment: MainAxisAlignment.spaceBetween,
-          crossAxisAlignment: CrossAxisAlignment.center,
-          children: [
-            Expanded(
-              flex: 1,
-              child: Container(
-                color: Colors.grey,
-                height: 1.5,
-              ),
+  Widget header(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 50),
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        crossAxisAlignment: CrossAxisAlignment.center,
+        children: [
+          Expanded(
+            flex: 1,
+            child: Container(
+              color: Colors.grey,
+              height: 1.5,
             ),
-            Expanded(
-              flex: 2,
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: <Widget>[
-                  Text(
-                    'Task',
-                    style:
-                        TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
-                  ),
-                  Text(
-                    'Lists',
-                    style: TextStyle(fontSize: 28.0, color: Colors.grey),
-                  )
-                ],
-              ),
+          ),
+          Expanded(
+            flex: 2,
+            child: Row(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: <Widget>[
+                Text(
+                  'Task',
+                  style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
+                ),
+                Text(
+                  'Lists',
+                  style: TextStyle(fontSize: 28.0, color: Colors.grey),
+                )
+              ],
             ),
-            Expanded(
-              flex: 1,
-              child: Container(
-                color: Colors.grey,
-                height: 1.5,
-              ),
+          ),
+          Expanded(
+            flex: 1,
+            child: Container(
+              color: Colors.grey,
+              height: 1.5,
             ),
-          ],
-        ),
-      );
-    },
-  );
+          ),
+        ],
+      ),
+    );
+  }
 
-  Widget addListBtn = Builder(
-    builder: (context) {
-      return Padding(
-        padding: EdgeInsets.only(top: 50.0),
-        child: Column(
-          children: <Widget>[
-            Container(
-              width: 50.0,
-              height: 50.0,
-              decoration: BoxDecoration(
-                  border: Border.all(color: Colors.black38),
-                  borderRadius: BorderRadius.all(Radius.circular(7.0))),
-              child: IconButton(
-                icon: Icon(Icons.add),
-                iconSize: 30.0,
-                onPressed: () async {
-                  Navigator.of(context).push(
-                    PageRouteBuilder(
-                      pageBuilder: (_, __, ___) => NewListPage(),
-                      transitionsBuilder:
-                          (context, animation, secondaryAnimation, child) =>
-                              new ScaleTransition(
-                        scale: new Tween<double>(
-                          begin: 1.5,
+  Widget addListBtn(BuildContext context) {
+    return Padding(
+      padding: EdgeInsets.only(top: 50.0),
+      child: Column(
+        children: <Widget>[
+          // 按钮主体
+          Container(
+            width: 50.0,
+            height: 50.0,
+            decoration: BoxDecoration(
+                border: Border.all(color: Colors.black38),
+                borderRadius: BorderRadius.all(Radius.circular(7.0))),
+            child: IconButton(
+              icon: Icon(Icons.add),
+              iconSize: 30.0,
+              onPressed: () async {
+                Navigator.of(context).push(
+                  PageRouteBuilder(
+                    pageBuilder: (_, __, ___) => NewListPage(),
+                    // 过度动画
+                    transitionsBuilder:
+                        (context, animation, secondaryAnimation, child) =>
+                            ScaleTransition(
+                      scale: Tween<double>(
+                        begin: 1.5,
+                        end: 1.0,
+                      ).animate(
+                        CurvedAnimation(
+                          parent: animation,
+                          curve: Interval(
+                            0.50,
+                            1.00,
+                            curve: Curves.linear,
+                          ),
+                        ),
+                      ),
+                      child: ScaleTransition(
+                        scale: Tween<double>(
+                          begin: 0.0,
                           end: 1.0,
                         ).animate(
                           CurvedAnimation(
                             parent: animation,
                             curve: Interval(
+                              0.00,
                               0.50,
-                              1.00,
                               curve: Curves.linear,
                             ),
                           ),
                         ),
-                        child: ScaleTransition(
-                          scale: Tween<double>(
-                            begin: 0.0,
-                            end: 1.0,
-                          ).animate(
-                            CurvedAnimation(
-                              parent: animation,
-                              curve: Interval(
-                                0.00,
-                                0.50,
-                                curve: Curves.linear,
-                              ),
-                            ),
-                          ),
-                          child: child,
-                        ),
+                        child: child,
                       ),
                     ),
-                  );
-                },
-              ),
+                  ),
+                );
+              },
             ),
-            Padding(
-              padding: EdgeInsets.only(top: 10),
-              child: Text(
-                'Add List',
-                style: TextStyle(color: Colors.black45),
-              ),
+          ),
+          // 按钮文字
+          Padding(
+            padding: EdgeInsets.only(top: 10),
+            child: Text(
+              'Add List',
+              style: TextStyle(color: Colors.black45),
             ),
-          ],
-        ),
-      );
-    },
-  );
+          ),
+        ],
+      ),
+    );
+  }
 
+  // TODO: 抽离卡片部件
   getExistItems() {
     List<Task> taskElems = List();
     List<TaskList> taskList = List();
@@ -331,9 +328,9 @@ class _TaskPageState extends State<TaskPage>
         children: [
           Column(
             children: [
-              toolBar,
-              header,
-              addListBtn,
+              toolBar(context),
+              header(context),
+              addListBtn(context),
             ],
           ),
           Padding(
