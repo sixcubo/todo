@@ -253,7 +253,7 @@ class _TaskPageState extends State<TaskPage>
             await Navigator.of(context).push(
               PageRouteBuilder(
                 pageBuilder: (_, __, ___) => DetailPage(
-                  i: index,
+                  //i: index,
                   list: list,
                   //color: Color(list.color),
                 ),

@@ -9,11 +9,11 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 
 class DetailPage extends StatefulWidget {
-  final int i;
-  final TaskList list;
+  //final int i;
+  TaskList list;
   //final Color color;
 
-  DetailPage({Key key, this.i, this.list}) : super(key: key);
+  DetailPage({Key key, this.list}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _DetailPageState();
@@ -30,11 +30,13 @@ class _DetailPageState extends State<DetailPage> {
 
   query() async {
     dbManager = await DBManager.getInstance();
-
-    debugPrint('查询');
     tasks = await dbManager.queryTasksInExactList(widget.list.listID);
+    widget.list = await dbManager.queryTaskListExactID(widget.list.listID);
 
     setState(() {});
+
+    debugPrint('查询');
+    debugPrint('${tasks.toString()}');
   }
 
   //ValueChanged<Color> onColorChanged;
@@ -128,14 +130,14 @@ class _DetailPageState extends State<DetailPage> {
     );
   }
 
-  Widget taskElem(Task task) {
-    return Row(
-      children: [],
-    );
-  }
+  // Widget taskElem(Task task) {
+  //   return Row(
+  //     children: [],
+  //   );
+  // }
 
   Widget taskElems(BuildContext context) {
-    debugPrint('任务元素');
+    debugPrint('构建任务元素');
 
     if (false) {
       return Center(
@@ -155,6 +157,7 @@ class _DetailPageState extends State<DetailPage> {
                 child: Row(
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
+                    // 列表名
                     Flexible(
                       fit: FlexFit.loose,
                       child: Text(
@@ -165,6 +168,7 @@ class _DetailPageState extends State<DetailPage> {
                             fontWeight: FontWeight.bold, fontSize: 35.0),
                       ),
                     ),
+                    // 删除按钮
                     GestureDetector(
                       onTap: () {
                         showDialog(
@@ -194,18 +198,16 @@ class _DetailPageState extends State<DetailPage> {
                                   //minWidth: double.infinity,
                                   child: RaisedButton(
                                     elevation: 3.0,
-                                    // onPressed: () {
-                                    //   Firestore.instance
-                                    //       .collection(widget.user.uid)
-                                    //       .document(widget.currentList.keys
-                                    //       .elementAt(widget.i))
-                                    //       .delete();
-                                    //   Navigator.pop(context);
-                                    //   Navigator.of(context).pop();
-                                    // },
-                                    child: Text('YES'),
                                     color: currentColor,
+                                    child: Text('YES'),
                                     textColor: const Color(0xffffffff),
+                                    onPressed: () async {
+                                      await dbManager
+                                          .deleteTaskList(widget.list);
+                                      query();
+                                      Navigator.pop(context); // 出栈对话框
+                                      Navigator.pop(context); // 出栈卡片界面
+                                    },
                                   ),
                                 ),
                               ],
@@ -229,9 +231,8 @@ class _DetailPageState extends State<DetailPage> {
                   children: <Widget>[
                     new Text(
                       widget.list.doneCount.toString() +
-                          " of " +
-                          widget.list.count.toString() +
-                          " tasks",
+                          " / " +
+                          widget.list.count.toString(),
                       style: TextStyle(fontSize: 18.0, color: Colors.black54),
                     ),
                   ],
@@ -253,11 +254,10 @@ class _DetailPageState extends State<DetailPage> {
                   ],
                 ),
               ),
-              // 任务项
+              // 任务列表
               Padding(
                 padding: EdgeInsets.only(top: 30.0),
-                child: 
-                Column(
+                child: Column(
                   children: <Widget>[
                     Container(
                       color: Color(0xFFFCFCFC),
@@ -267,27 +267,24 @@ class _DetailPageState extends State<DetailPage> {
                           physics: const BouncingScrollPhysics(),
                           itemCount: tasks.length,
                           itemBuilder: (BuildContext ctxt, int i) {
+                            // 任务项
                             return Slidable(
                               delegate: SlidableBehindDelegate(),
                               actionExtentRatio: 0.25,
                               child: GestureDetector(
-                                // onTap: () {
-                                //   Firestore.instance
-                                //       .collection(widget.user.uid)
-                                //       .document(widget.currentList.keys
-                                //           .elementAt(widget.i))
-                                //       .updateData({
-                                //     listElement.elementAt(i).name:
-                                //         !listElement.elementAt(i).isDone
-                                //   });
-                                // },
+                                // 点击添加或取消打勾
+                                onTap: () async {
+                                  await dbManager.updateState(tasks[i]);
+                                  query();
+                                },
                                 child: Container(
                                   height: 50.0,
                                   color: tasks[i].state == 1
                                       ? Color(0xFFF0F0F0)
                                       : Color(0xFFFCFCFC),
                                   child: Padding(
-                                    padding: EdgeInsets.only(left: 30.0, right: 30.0),
+                                    padding: EdgeInsets.only(
+                                        left: 30.0, right: 30.0),
                                     child: Row(
                                       mainAxisAlignment:
                                           MainAxisAlignment.start,
@@ -327,21 +324,16 @@ class _DetailPageState extends State<DetailPage> {
                                   ),
                                 ),
                               ),
+                              // 右划删除按钮
                               secondaryActions: <Widget>[
-                                new IconSlideAction(
+                                IconSlideAction(
                                   caption: 'Delete',
                                   color: Colors.red,
                                   icon: Icons.delete,
-                                  // onTap: () {
-                                  //     Firestore.instance
-                                  //         .collection(widget.user.uid)
-                                  //         .document(widget.currentList.keys
-                                  //         .elementAt(widget.i))
-                                  //         .updateData({
-                                  //       listElement.elementAt(i).name:
-                                  //       ""
-                                  //     });
-                                  // },
+                                  onTap: () async {
+                                    await dbManager.deleteTask(tasks[i]);
+                                    await query();
+                                  },
                                 ),
                               ],
                             );
@@ -361,12 +353,12 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   Widget build(BuildContext context) {
-    debugPrint('构建');
+    debugPrint('构建全部');
 
     return Scaffold(
       //key: _scaffoldKey,
       backgroundColor: Colors.white,
-      body: new Stack(
+      body: Stack(
         children: <Widget>[
           _getToolbar(context),
           Container(
@@ -375,25 +367,11 @@ class _DetailPageState extends State<DetailPage> {
                 overscroll.disallowGlow();
               },
               child: taskElems(context),
-              //     // child: new StreamBuilder<QuerySnapshot>(
-              //     //     // stream: Firestore.instance
-              //     //     //     .collection(widget.user.uid)
-              //     //     //     .snapshots(),
-              //     //     builder: (BuildContext context,
-              //     //         AsyncSnapshot<QuerySnapshot> snapshot) {
-              //     //       if (!snapshot.hasData)
-              //     //         return new Center(
-              //     //             child: CircularProgressIndicator(
-              //     //           backgroundColor: currentColor,
-              //     //         ));
-              //     //       return new Container(
-              //     //         child: getExpenseItems(snapshot),
-              //     //       );
-              //     //     }),
             ),
           ),
         ],
       ),
+      // 增加按钮
       floatingActionButton: DiamondFab(
         onPressed: () {
           showDialog(
@@ -430,19 +408,19 @@ class _DetailPageState extends State<DetailPage> {
                     //minWidth: double.infinity,
                     child: RaisedButton(
                       elevation: 3.0,
+                      color: currentColor,
+                      textColor: const Color(0xffffffff),
+                      child: Text('Add'),
                       onPressed: () async {
                         Task task = Task(
                           itemController.text.toString(),
                           widget.list.listID,
                         );
-                        dbManager.insertTask(widget.list, task);
+                        await dbManager.insertTask(widget.list, task);
                         query();
                         itemController.clear();
                         Navigator.of(context).pop();
                       },
-                      child: Text('Add'),
-                      color: currentColor,
-                      textColor: const Color(0xffffffff),
                     ),
                   )
                 ],

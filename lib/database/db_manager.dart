@@ -56,6 +56,33 @@ class DBManager {
     );
   }
 
+  Future<Map<int, List<Task>>> queryAll() async {
+    Map<int, List<Task>> res = Map();
+
+    List<TaskList> listTable = await queryTaskList();
+
+    if (listTable.isNotEmpty) {
+      for (var list in listTable) {
+        List<Task> tasks = await queryTasksInExactList(list.listID);
+        //if (tasks.isEmpty) {}
+        res[list.listID] = tasks;
+      }
+    }
+    return res;
+  }
+
+  Future<TaskList> queryTaskListExactID(int id) async {
+    var sql = """
+    SELECT * FROM "listTable"
+    WHERE listID=?
+    """;
+
+    var res = await _database.rawQuery(sql, [id]);
+    //debugPrint(res.toString());
+
+    return TaskList.fromMap(res[0]);
+  }
+
   Future<List<TaskList>> queryTaskList() async {
     debugPrint('query list');
 
@@ -64,13 +91,13 @@ class DBManager {
     """;
 
     var res = await _database.rawQuery(sql);
-    debugPrint(res.toString());
+    //debugPrint(res.toString());
 
     return res.map((e) => TaskList.fromMap(e)).toList();
   }
 
   Future<int> insertTaskList(TaskList list) async {
-    debugPrint('add list');
+    //debugPrint('add list');
     //debugPrint(list.toString());
     //debugPrint(list.color.toString());
 
@@ -93,29 +120,15 @@ class DBManager {
     return res;
   }
 
-  // deleteTaskList(TaskList list) {
-  //   debugPrint('delete list');
+  deleteTaskList(TaskList list) {
+    //debugPrint('delete list');
 
-  //   var sql = """
-  //   DELETE FROM "taskTable"
-  //   """;
+    var sql = """
+    DELETE FROM "listTable"
+    WHERE listID=?
+    """;
 
-  //   _database.rawDelete('DELETE FROM "taskTable"');
-  // }
-
-  Future<Map<int, List<Task>>> queryAll() async {
-    Map<int, List<Task>> res = Map();
-
-    List<TaskList> listTable = await queryTaskList();
-
-    if (listTable.isNotEmpty) {
-      for (var list in listTable) {
-        List<Task> tasks = await queryTasksInExactList(list.listID);
-        //if (tasks.isEmpty) {}
-        res[list.listID] = tasks;
-      }
-    }
-    return res;
+    _database.rawDelete(sql, [list.listID]);
   }
 
   Future<List<Task>> queryTasksInExactList(int listID) async {
@@ -126,27 +139,96 @@ class DBManager {
 
     List<Map<String, dynamic>> res = await _database.rawQuery(sql);
 
-    debugPrint('指定查找结果: ' + res.toString());
+    //debugPrint('指定查找结果: ' + res.toString());
 
     return res.map((e) => Task.fromMap(e)).toList();
   }
 
-  Future<int> insertTask(TaskList list, Task task) async {
-    debugPrint('add task to list');
+  // 在TaskTable插入一条记录, 同时更新TaskList
+  insertTask(TaskList list, Task task) async {
+    //debugPrint('add task to list');
 
-    var sql = """
+    var sql1 = """
     INSERT INTO "taskTable" (taskID, taskName, state, dateTime, listID)
     VALUES(NULL, ?, ?, NULL, ?)
     """;
+    var sql2 = """
+    UPDATE "listTable" 
+    SET count=?
+    WHERE listID=?
+    """;
 
-    return await _database.rawInsert(sql, [
-      task.taskName,
-      task.state,
-      task.listID,
-    ]);
+    await _database.transaction(
+      (txn) async {
+        await txn.rawInsert(sql1, [
+          task.taskName,
+          task.state,
+          task.listID,
+        ]);
+
+        await txn.rawUpdate(sql2, [
+          list.count + 1,
+          list.listID,
+        ]);
+
+        //debugPrint('插入同时更新count');
+      },
+    );
   }
 
-  // deleteTask(String listName, Task task) {
-  //   debugPrint('delete elem to list');
-  // }
+  updateState(Task task) async {
+    int doneCount = (await queryTaskListExactID(task.listID)).doneCount;
+
+    var sql1 = """
+    UPDATE "taskTable" 
+    SET state=?
+    WHERE listID=? AND taskID=?
+    """;
+
+    var sql2 = """
+    UPDATE "listTable" 
+    SET doneCount=?
+    WHERE listID=?
+    """;
+
+    await _database.transaction((txn) async {
+      await txn.rawUpdate(sql1, [
+        task.state == 1 ? 0 : 1,
+        task.listID,
+        task.taskID,
+      ]);
+
+      await txn.rawUpdate(sql2, [
+        task.state == 1 ? (doneCount - 1) : (doneCount + 1),
+        task.listID,
+      ]);
+    });
+  }
+
+  deleteTask(Task task) async {
+    debugPrint('删除任务');
+
+    TaskList list = await queryTaskListExactID(task.listID);
+
+    var sql1 = """
+    DELETE FROM "taskTable"
+    WHERE taskID=?
+    """;
+
+    var sql2 = """
+    UPDATE "listTable"
+    SET doneCount=?, count=?
+    WHERE listID=?
+    """;
+
+    await _database.transaction((txn) async {
+      await txn.rawDelete(sql1, [task.taskID]);
+
+      await txn.rawUpdate(sql2, [
+        task.state == 1 ? (list.doneCount - 1) : (list.doneCount),
+        list.count - 1,
+        task.listID,
+      ]);
+    });
+  }
 }

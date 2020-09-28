@@ -76,6 +76,8 @@ class _NewListPageState extends State<NewListPage> {
     setState(() {
       _saving = false;
     });
+    
+    Navigator.of(context).pop();
   }
 
   Container _getToolbar(BuildContext context) {
