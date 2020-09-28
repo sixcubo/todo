@@ -27,7 +27,7 @@ class _NewListPageState extends State<NewListPage> {
   Color currentColor = Color(0xff6633ff);
   Color pickerColor = Color(0xff6633ff);
 
-  ValueChanged<Color> onColorChanged;
+  //ValueChanged<Color> onColorChanged;
 
   changeColor(Color color) {
     setState(() => pickerColor = color);
@@ -64,26 +64,18 @@ class _NewListPageState extends State<NewListPage> {
     ));
   }
 
-  _submit() {
+  _submit() async {
     setState(() {
       _saving = true;
     });
 
-    // TODO: 加异步操作
-    Future.delayed(Duration(seconds: 2), () {
-      TaskList list =
-          new TaskList(listNameController.text.toString().trim(), currentColor);
-      DBManager.getInstance().then((value) => value.addTaskList(list));
-      //DBManager.get.addTaskList(list);
+    TaskList list =
+        TaskList(listNameController.text.toString().trim(), currentColor.value);
+    DBManager.getInstance().then((dbM) => dbM.insertTaskList(list));
 
-      setState(() {
-        _saving = false;
-      });
+    setState(() {
+      _saving = false;
     });
-
-    // setState(() {
-    //   _saving = false;
-    // });
   }
 
   Container _getToolbar(BuildContext context) {
@@ -224,7 +216,6 @@ class _NewListPageState extends State<NewListPage> {
             color: Colors.blue,
             elevation: 4.0,
             splashColor: Colors.deepPurple,
-            // TODO: finish this
             onPressed: _submit,
           ),
         ],
