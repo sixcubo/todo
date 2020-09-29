@@ -1,3 +1,5 @@
+import 'dart:async';
+
 import 'package:flutter/cupertino.dart';
 import 'package:sqflite/sqflite.dart';
 import 'package:path/path.dart';
@@ -5,19 +7,28 @@ import 'package:path/path.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
 
+///此类为单例模式
+///定义全局变量, 引入此文件即可使用.
+DBManager dbManager = DBManager();
+
 class DBManager {
+  DBManager._internal();
+  static DBManager _singleton = new DBManager._internal();
+  factory DBManager() {
+    debugPrint('创建单例');
+    return _singleton;
+  }
+
   static const _VERSION = 1;
   static const _NAME = "todo.db";
-
-  static DBManager _dbManager = new DBManager();
   static Database _database;
 
-  static Future<DBManager> getInstance() async {
-    if (_database == null) {
-      await initDB();
-    }
-    return _dbManager;
-  }
+  // static Future<DBManager> getInstance() async {
+  //   if (_database == null) {
+  //     await initDB();
+  //   }
+  //   return _singleton;
+  // }
 
   // 初始化[_database]
   static initDB() async {
@@ -54,6 +65,8 @@ class DBManager {
         await db.execute(createTaskTableSql);
       },
     );
+
+    debugPrint('初始化数据库');
   }
 
   Future<Map<int, List<Task>>> queryAll() async {
@@ -84,15 +97,15 @@ class DBManager {
   }
 
   Future<List<TaskList>> queryTaskList() async {
-    debugPrint('query list');
+    if (_database == null) {
+      await initDB();
+    }
 
     var sql = """
     SELECT * FROM "listTable"
     """;
-
     var res = await _database.rawQuery(sql);
-    //debugPrint(res.toString());
-
+    
     return res.map((e) => TaskList.fromMap(e)).toList();
   }
 

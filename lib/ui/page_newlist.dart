@@ -71,12 +71,12 @@ class _NewListPageState extends State<NewListPage> {
 
     TaskList list =
         TaskList(listNameController.text.toString().trim(), currentColor.value);
-    DBManager.getInstance().then((dbM) => dbM.insertTaskList(list));
+    dbManager.insertTaskList(list);
 
     setState(() {
       _saving = false;
     });
-    
+
     Navigator.of(context).pop();
   }
 

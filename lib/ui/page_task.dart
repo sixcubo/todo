@@ -1,4 +1,5 @@
 import 'package:flutter/material.dart';
+import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:todo/database/db_manager.dart';
@@ -19,13 +20,12 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage>
     with SingleTickerProviderStateMixin {
-  //int index = 1;
-  DBManager dbManager;
+  //DBManager dbManager;
   List<TaskList> listTable = new List();
   Map<int, List<Task>> allTasks = new Map();
 
   void query() async {
-    dbManager = await DBManager.getInstance();
+    //dbManager = await DBManager.getInstance();
     listTable = await dbManager.queryTaskList();
     allTasks = await dbManager.queryAll();
 
@@ -52,14 +52,14 @@ class _TaskPageState extends State<TaskPage>
   Widget toolBar(BuildContext context) {
     return Padding(
       padding: EdgeInsets.only(top: 50.0, left: 20.0, right: 20.0),
-      child: new Row(
+      child: Row(
         mainAxisAlignment: MainAxisAlignment.center,
         children: [
-          new Image(
+          Image(
             width: 40.0,
             height: 40.0,
             fit: BoxFit.cover,
-            image: new AssetImage('assets/list.png'),
+            image: AssetImage('assets/list.png'),
           ),
         ],
       ),
@@ -181,13 +181,10 @@ class _TaskPageState extends State<TaskPage>
     );
   }
 
-  // TODO: 抽离卡片部件
   List<GestureDetector> getExistItems() {
     Column getTaskInfo(int listID) {
       List<Task> tasks = allTasks[listID];
       if (tasks.isNotEmpty) {
-        debugPrint('listID: ${allTasks[listID]} tasks非空');
-
         return Column(
           children: <Widget>[
             SizedBox(
@@ -236,7 +233,6 @@ class _TaskPageState extends State<TaskPage>
           ],
         );
       } else {
-        debugPrint('allTask空');
         return null;
       }
     }
@@ -356,33 +352,35 @@ class _TaskPageState extends State<TaskPage>
   }
 
   Widget listCards(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: 50.0),
-      child: Container(
-        height: 360.0,
-        padding: EdgeInsets.only(bottom: 25.0),
-        child: NotificationListener<OverscrollIndicatorNotification>(
-          onNotification: (overscroll) {
-            overscroll.disallowGlow();
-          },
-          child: Builder(
-            builder: (BuildContext context) {
-              if (listTable.isEmpty) {
-                return Center(
-                  child: CircularProgressIndicator(
-                    backgroundColor: Colors.blue,
-                  ),
-                );
-              }
-              return ListView(
+    return Container(
+      // constraints: BoxConstraints(
+      //   maxHeight: 500,
+      // ),
+      height: 450.0,
+      padding: EdgeInsets.only(top: 50.0, bottom: 25),
+      child: NotificationListener<OverscrollIndicatorNotification>(
+        onNotification: (overscroll) {
+          overscroll.disallowGlow();
+        },
+        child: Builder(
+          builder: (BuildContext context) {
+            if (listTable.isEmpty) {
+              return Center(
+                child: CircularProgressIndicator(
+                  backgroundColor: Colors.blue,
+                ),
+              );
+            }
+            return Center(
+              child: ListView(
                 physics: const BouncingScrollPhysics(),
                 padding: EdgeInsets.only(left: 40.0, right: 40.0),
                 scrollDirection: Axis.horizontal,
                 children: getExistItems(),
                 // children: getExpenseItems(snapshot),
-              );
-            },
-          ),
+              ),
+            );
+          },
         ),
       ),
     );
@@ -391,15 +389,11 @@ class _TaskPageState extends State<TaskPage>
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      body: ListView(
+      body: Column(
         children: [
-          Column(
-            children: [
-              toolBar(context),
-              header(context),
-              addListBtn(context),
-            ],
-          ),
+          toolBar(context),
+          header(context),
+          addListBtn(context),
           listCards(context),
         ],
       ),

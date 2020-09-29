@@ -24,11 +24,6 @@ class _HomePageState extends State<HomePage> {
   ];
 
   @override
-  void dispose() {
-    super.dispose();
-  }
-
-  @override
   void initState() {
     super.initState();
 
@@ -36,6 +31,11 @@ class _HomePageState extends State<HomePage> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   void onTabTapped(int index) {
