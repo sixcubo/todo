@@ -119,16 +119,23 @@ class _TaskPageState extends State<TaskPage>
         child: Builder(
           builder: (BuildContext context) {
             return Center(
-              child: Consumer<TasklistTable>(
-
-                builder: (context, value, child) {
+              child: Selector<TasklistTable, List<Tasklist>>(
+                shouldRebuild: (previous, next) => false,
+                selector: (context, value) => value.data,
+                builder: (context, res, child) {
                   return ListView.builder(
                     physics: const BouncingScrollPhysics(),
                     padding: EdgeInsets.only(left: 40.0, right: 40.0),
                     scrollDirection: Axis.horizontal,
-                    itemCount: value.data.length,
+                    itemCount: res.length,
                     itemBuilder: (context, i) {
-                      return TasklistCard(value.data[i]);
+                      return Selector<TasklistTable, Tasklist>(
+                        shouldRebuild: (previous, next) => previous != next,
+                        selector: (context, value) => value.data[i],
+                        builder: (context, res, child) {
+                          return TasklistCard(res);
+                        },
+                      );
                     },
                   );
                 },

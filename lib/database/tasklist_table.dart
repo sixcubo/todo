@@ -7,9 +7,10 @@ import 'package:todo/model/task_list.dart';
 TasklistTable tasklistTable = TasklistTable();
 
 class TasklistTable extends ChangeNotifier {
-
   static TasklistTable _singleton = new TasklistTable._internal();
+
   TasklistTable._internal();
+
   factory TasklistTable() => _singleton;
 
   List<Tasklist> data;
@@ -17,6 +18,16 @@ class TasklistTable extends ChangeNotifier {
   init() async {
     debugPrint("初始化ListTable");
     this.data = await queryTasklistTable();
+  }
+
+  Tasklist getTasklist(int id) {
+    for (var i in data) {
+      if (id == i.tasklistID) {
+        return i;
+      }
+    }
+
+    return null;
   }
 
   static Future<List<Tasklist>> queryTasklistTable() async {
@@ -79,5 +90,4 @@ class TasklistTable extends ChangeNotifier {
     init();
     notifyListeners();
   }
-
 }

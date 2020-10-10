@@ -18,6 +18,12 @@ class TaskTable extends ChangeNotifier {
     data = await queryTaskTable();
   }
 
+  // List<Task> getTasks(int id) {
+  //     for (var i in data) {
+  //       if ()
+  //     }
+  // }
+
   static Future<Map<int, List<Task>>> queryTaskTable() async {
     List<Tasklist> listTable = await TasklistTable.queryTasklistTable();
     Map<int, List<Task>> res = {};

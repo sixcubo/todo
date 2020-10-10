@@ -86,12 +86,13 @@ class TasklistCard extends StatelessWidget {
               Animation<double> animation,
               Animation<double> secondaryAnimation,
             ) {
-              return Consumer<TaskTable>(
-                builder: (context, value, child) {
-                  //var tasks = value.data[tasklist.tasklistID];
-                  return DetailPage(tasklist, value);
-                },
-              );
+              return DetailPage(tasklist.tasklistID);
+              // return Selector<TaskTable, List<Task>>(
+              //   selector: (context, value) => value.data[tasklist.tasklistID],
+              //   builder: (context, res, child) {
+              //     return DetailPage(tasklist, res);
+              //   },
+              // );
             },
           ),
         );
