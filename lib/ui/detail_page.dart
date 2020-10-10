@@ -1,6 +1,9 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:todo/database/db_manager.dart';
+import 'package:todo/database/db_provider.dart';
+import 'package:todo/database/tasklist_table.dart';
+import 'package:todo/database/task_table.dart';
+import 'package:todo/database/tasks_exact_tasklist.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
 
@@ -8,36 +11,28 @@ import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 import 'package:todo/util/diamond_fab.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:provider/provider.dart';
 
 class DetailPage extends StatefulWidget {
-  final TaskList list;
+  final Tasklist tasklist;
+  final TaskTable taskTable;
 
-  DetailPage({Key key, this.list}) : super(key: key);
+  DetailPage(this.tasklist, this.taskTable, {Key key}) : super(key: key);
 
   @override
   State<StatefulWidget> createState() => _DetailPageState();
 }
 
 class _DetailPageState extends State<DetailPage> {
-  TaskList _list;
+  // List<Task> _tasks;
+  // Tasklist _tasklist;
+  var tasks;
 
-  TextEditingController itemController = new TextEditingController();
+
+  TextEditingController editController;
 
   Color currentColor;
   Color pickerColor;
-
-  //DBManager dbManager;
-  List<Task> tasks = new List();
-
-  query() async {
-    //dbManager = await DBManager.getInstance();
-    tasks = await dbManager.queryTasksInExactList(_list.listID);
-    _list = await dbManager.queryTaskListExactID(_list.listID);
-    debugPrint('${_list.toString()}');
-    setState(() {});
-
-    debugPrint('重构');
-  }
 
   changeColor(Color color) {
     setState(() => pickerColor = color);
@@ -45,17 +40,14 @@ class _DetailPageState extends State<DetailPage> {
 
   @override
   void initState() {
+    tasks = taskTable.data[widget.tasklist.tasklistID];
+    // _tasks = widget.tasksExactTasklist.data;
+    // _tasklist = widget.tasksExactTasklist.tasklist;
+
+    editController = new TextEditingController();
+    currentColor = Color(widget.tasklist.color);
+
     super.initState();
-
-    _list = widget.list;
-    currentColor = Color(_list.color);
-
-    query();
-  }
-
-  @override
-  void dispose() {
-    super.dispose();
   }
 
   Padding _getToolbar(BuildContext context) {
@@ -120,118 +112,150 @@ class _DetailPageState extends State<DetailPage> {
   }
 
   Widget header(BuildContext context) {
-    return Container(
-      child: Padding(
-        padding: EdgeInsets.only(top: 20.0),
-        child: Column(
-          children: [
-            // 标题
-            Padding(
-              padding: EdgeInsets.only(top: 5.0, left: 50.0, right: 20.0),
-              child: Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: <Widget>[
-                  // 列表名
-                  Flexible(
-                    fit: FlexFit.loose,
-                    child: Text(
-                      _list.listName.toString(),
-                      softWrap: true,
-                      overflow: TextOverflow.fade,
-                      style: TextStyle(
-                          fontWeight: FontWeight.bold, fontSize: 35.0),
-                    ),
-                  ),
-                  // 删除按钮
-                  GestureDetector(
-                    onTap: () {
-                      showDialog(
-                        context: context,
-                        builder: (BuildContext context) {
-                          return AlertDialog(
-                            title: Text("Delete: " + _list.listName.toString()),
-                            content: Text(
-                              "Are you sure you want to delete this list?",
-                              style: TextStyle(fontWeight: FontWeight.w400),
-                            ),
-                            actions: <Widget>[
-                              ButtonTheme(
-                                //minWidth: double.infinity,
-                                child: RaisedButton(
-                                  elevation: 3.0,
-                                  onPressed: () {
-                                    Navigator.pop(context);
-                                  },
-                                  child: Text('No'),
-                                  color: currentColor,
-                                  textColor: const Color(0xffffffff),
-                                ),
-                              ),
-                              ButtonTheme(
-                                //minWidth: double.infinity,
-                                child: RaisedButton(
-                                  elevation: 3.0,
-                                  color: currentColor,
-                                  child: Text('YES'),
-                                  textColor: const Color(0xffffffff),
-                                  onPressed: () async {
-                                    await dbManager.deleteTaskList(_list);
-                                    query();
-                                    Navigator.pop(context); // 出栈对话框
-                                    Navigator.pop(context); // 出栈卡片界面
-                                  },
-                                ),
-                              ),
-                            ],
-                          );
-                        },
-                      );
-                    },
-                    child: Icon(
-                      FontAwesomeIcons.trash,
-                      size: 25.0,
-                      color: currentColor,
-                    ),
-                  ),
-                ],
-              ),
+    double donePercent = widget.tasklist.doneCount /
+        widget.tasklist.count;
+
+    return Expanded(
+      //padding: EdgeInsets.only(top: 20.0),
+      flex: 2,
+      child: Column(
+        children: [
+          // 标题
+          // Padding(
+          //   padding: EdgeInsets.only(top: 5.0, left: 50.0, right: 20.0),
+          //   child: Row(
+          //     mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          //     children: <Widget>[
+          //       // 列表名
+          //       Flexible(
+          //         fit: FlexFit.loose,
+          //         child: Text(
+          //           _tasklist.tasklistName.toString(),
+          //           softWrap: true,
+          //           overflow: TextOverflow.fade,
+          //           style: TextStyle(
+          //               fontWeight: FontWeight.bold, fontSize: 35.0),
+          //         ),
+          //       ),
+          //       // 删除按钮
+          //       GestureDetector(
+          //         onTap: () {
+          //           showDialog(
+          //             context: context,
+          //             builder: (BuildContext context) {
+          //               return AlertDialog(
+          //                 title: Text(
+          //                     "Delete: " + _tasklist.tasklistName.toString()),
+          //                 content: Text(
+          //                   "Are you sure you want to delete this list?",
+          //                   style: TextStyle(fontWeight: FontWeight.w400),
+          //                 ),
+          //                 actions: <Widget>[
+          //                   ButtonTheme(
+          //                     //minWidth: double.infinity,
+          //                     child: RaisedButton(
+          //                       elevation: 3.0,
+          //                       onPressed: () {
+          //                         Navigator.pop(context);
+          //                       },
+          //                       child: Text('No'),
+          //                       color: currentColor,
+          //                       textColor: const Color(0xffffffff),
+          //                     ),
+          //                   ),
+          //                   ButtonTheme(
+          //                     //minWidth: double.infinity,
+          //                     child: RaisedButton(
+          //                       elevation: 3.0,
+          //                       color: currentColor,
+          //                       child: Text('YES'),
+          //                       textColor: const Color(0xffffffff),
+          //                       // TODO:
+          //                       onPressed: () async {
+          //                         await tasklistTable
+          //                             .deleteTasklist(_tasklist);
+          //                         //query();
+          //                         Navigator.pop(context); // 出栈对话框
+          //                         Navigator.pop(context); // 出栈卡片界面
+          //                       },
+          //                     ),
+          //                   ),
+          //                 ],
+          //               );
+          //             },
+          //           );
+          //         },
+          //         child: Icon(
+          //           FontAwesomeIcons.trash,
+          //           size: 25.0,
+          //           color: currentColor,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+          // 未完成/完成
+          Expanded(
+            flex: 1,
+            //padding: EdgeInsets.only(top: 5.0, left: 50.0),
+            child: Text(
+              widget.tasklist.doneCount.toString() +
+                  " / " +
+                  widget.tasklist.count.toString(),
+              style: TextStyle(fontSize: 18.0, color: Colors.black54),
             ),
-            // 未完成/完成
-            Padding(
-              padding: EdgeInsets.only(top: 5.0, left: 50.0),
-              child: Row(
-                children: <Widget>[
-                  new Text(
-                    _list.doneCount.toString() + " / " + _list.count.toString(),
-                    style: TextStyle(fontSize: 18.0, color: Colors.black54),
+          ),
+          Expanded(
+            flex: 1,
+            child: Row(
+              children: <Widget>[
+                Expanded(
+                  flex: 16,
+                  child: LinearProgressIndicator(
+                    value: donePercent,
+                    backgroundColor: Colors.grey.withAlpha(50),
+                    valueColor: AlwaysStoppedAnimation<Color>(
+                        Color(widget.tasklist.color)),
                   ),
-                ],
-              ),
-            ),
-            // 横线
-            Padding(
-              padding: EdgeInsets.only(top: 5.0),
-              child: Row(
-                children: <Widget>[
-                  Expanded(
-                    flex: 2,
-                    child: Container(
-                      margin: EdgeInsets.only(left: 50.0),
-                      color: Colors.grey,
-                      height: 1.5,
-                    ),
+                ),
+                Spacer(),
+                Expanded(
+                  flex: 2,
+                  child: Text(
+                    (donePercent * 100).round().toString() + "%",
+                    style: TextStyle(fontSize: 14, fontWeight: FontWeight.bold),
                   ),
-                ],
-              ),
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+
+          // 横线
+          // Padding(
+          //   padding: EdgeInsets.only(top: 5.0),
+          //   child: Row(
+          //     children: <Widget>[
+          //       Expanded(
+          //         flex: 2,
+          //         child: Container(
+          //           margin: EdgeInsets.only(left: 50.0),
+          //           color: Colors.grey,
+          //           height: 1.5,
+          //         ),
+          //       ),
+          //     ],
+          //   ),
+          // ),
+        ],
       ),
     );
   }
 
   Widget taskElems(BuildContext context) {
+
+
     return Expanded(
+      flex: 10,
       child: Container(
         child: ListView.builder(
           physics: const BouncingScrollPhysics(),
@@ -244,8 +268,8 @@ class _DetailPageState extends State<DetailPage> {
               child: GestureDetector(
                 // 点击添加或取消对号
                 onTap: () async {
-                  await dbManager.updateState(tasks[i]);
-                  query();
+                  await widget.taskTable.updateState(tasks[i]);
+                  //query();
                 },
                 child: Container(
                   height: 50.0,
@@ -261,8 +285,9 @@ class _DetailPageState extends State<DetailPage> {
                           tasks[i].state == 1
                               ? FontAwesomeIcons.checkSquare
                               : FontAwesomeIcons.square,
-                          color:
-                              tasks[i].state == 1 ? currentColor : Colors.black,
+                          color: tasks[i].state == 1
+                              ? currentColor
+                              : Colors.black,
                           size: 20.0,
                         ),
                         Padding(
@@ -297,8 +322,8 @@ class _DetailPageState extends State<DetailPage> {
                   color: Colors.red,
                   icon: Icons.delete,
                   onTap: () async {
-                    await dbManager.deleteTask(tasks[i]);
-                    await query();
+                    await widget.taskTable.deleteTask(tasks[i]);
+                    //await query();
                   },
                 ),
               ],
@@ -329,7 +354,7 @@ class _DetailPageState extends State<DetailPage> {
                         contentPadding: EdgeInsets.only(
                             left: 16.0, top: 20.0, right: 16.0, bottom: 5.0),
                       ),
-                      controller: itemController,
+                      controller: editController,
                       style: TextStyle(
                         fontSize: 22.0,
                         color: Colors.black,
@@ -351,12 +376,12 @@ class _DetailPageState extends State<DetailPage> {
                     child: Text('Add'),
                     onPressed: () async {
                       Task task = Task(
-                        itemController.text.toString(),
-                        _list.listID,
+                        editController.text.toString(),
+                        widget.tasklist.tasklistID,
                       );
-                      await dbManager.insertTask(_list, task);
-                      query();
-                      itemController.clear();
+                      await widget.taskTable.insertTask(task);
+                      //query();
+                      editController.clear();
                       Navigator.of(context).pop();
                     },
                   ),
@@ -374,16 +399,25 @@ class _DetailPageState extends State<DetailPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      //key: _scaffoldKey,
       backgroundColor: Colors.white,
+      appBar: AppBar(
+        title: Text(widget.tasklist.tasklistName),
+        backgroundColor: Color(widget.tasklist.color),
+        elevation: 0,
+      ),
       body: Column(
         children: [
-          _getToolbar(context),
+          //_getToolbar(context),
           header(context),
           taskElems(context),
         ],
       ),
       floatingActionButton: addTaskBtn(context),
     );
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 }

@@ -1,9 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:todo/database/task_table.dart';
+import 'package:todo/database/tasklist_table.dart';
+import 'package:todo/database/tasks_exact_tasklist.dart';
 
 import 'package:todo/ui/page_done.dart';
-import 'package:todo/ui/page_task.dart';
+import 'package:todo/ui/task_page.dart';
+
+import 'package:provider/provider.dart';
 
 ///主界面, 包括底部导航栏和当前页面, 共有三个页面可以切换, 页面位于[_children].
 
@@ -66,12 +73,37 @@ class _HomePageState extends State<HomePage> {
 }
 
 class ToDoApp extends StatelessWidget {
+  Future<List> query() async {
+    await tasklistTable.init();
+    await taskTable.init();
+    return [tasklistTable, taskTable];
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ToDo',
-      home: HomePage(),
-      theme: ThemeData(primarySwatch: Colors.blue),
+    return FutureBuilder(
+      future: query(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider<TasklistTable>.value(value: tasklistTable),
+              ChangeNotifierProvider<TaskTable>.value(value: taskTable),
+            ],
+            child: MaterialApp(
+              title: 'ToDo',
+              home: HomePage(),
+              theme: ThemeData(primarySwatch: Colors.blue),
+            ),
+          );
+        } else {
+          return Center(
+            child: CircularProgressIndicator(
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+      },
     );
   }
 }

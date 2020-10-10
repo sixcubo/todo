@@ -2,8 +2,9 @@ import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
 import 'package:modal_progress_hud/modal_progress_hud.dart';
 
-import 'package:todo/database/db_manager.dart';
+import 'package:todo/database/db_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:todo/database/tasklist_table.dart';
 import 'package:todo/model/task_list.dart';
 
 ///NewListPage, 创建新任务列表的页面.
@@ -69,9 +70,9 @@ class _NewListPageState extends State<NewListPage> {
       _saving = true;
     });
 
-    TaskList list =
-        TaskList(listNameController.text.toString().trim(), currentColor.value);
-    dbManager.insertTaskList(list);
+    Tasklist list =
+        Tasklist(listNameController.text.toString().trim(), currentColor.value);
+    tasklistTable.insertTasklist(list);
 
     setState(() {
       _saving = false;
