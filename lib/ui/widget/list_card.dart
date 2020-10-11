@@ -13,16 +13,9 @@ import 'package:provider/provider.dart';
 import 'package:todo/database/tasks_exact_tasklist.dart';
 
 class TasklistCard extends StatelessWidget {
-  final Tasklist tasklist;
+  final int tasklistID;
 
-  TasklistCard(this.tasklist, {Key key}) : super(key: key);
-
-  // // 从数据库请求数据
-  // Future<TasksExactTasklist> query() async {
-  //   TasksExactTasklist tasks = TasksExactTasklist(taskListID);
-  //   await tasks.init();
-  //   return tasks;
-  // }
+  TasklistCard(this.tasklistID, {Key key}) : super(key: key);
 
   // 构建任务信息
   ListView tasksInfo(List<Task> tasks) {
@@ -50,9 +43,8 @@ class TasklistCard extends StatelessWidget {
               child: Text(
                 tasks[i].taskName,
                 style: TextStyle(
-                  decoration: tasks[i].state == 1
-                      ? TextDecoration.lineThrough
-                      : null,
+                  decoration:
+                      tasks[i].state == 1 ? TextDecoration.lineThrough : null,
                   color: Colors.black,
                   fontSize: 20.0,
                 ),
@@ -75,7 +67,6 @@ class TasklistCard extends StatelessWidget {
     //     //         child: Consumer<TasksExactTasklist>(
     //     //           builder: (context, value, child) =>
 
-    double donePercent = tasklist.doneCount / tasklist.count;
     return GestureDetector(
       onTap: () async {
         await Navigator.of(context).push(
@@ -86,13 +77,7 @@ class TasklistCard extends StatelessWidget {
               Animation<double> animation,
               Animation<double> secondaryAnimation,
             ) {
-              return DetailPage(tasklist.tasklistID);
-              // return Selector<TaskTable, List<Task>>(
-              //   selector: (context, value) => value.data[tasklist.tasklistID],
-              //   builder: (context, res, child) {
-              //     return DetailPage(tasklist, res);
-              //   },
-              // );
+              return DetailPage(tasklistID);
             },
           ),
         );
@@ -115,40 +100,53 @@ class TasklistCard extends StatelessWidget {
                   flex: 1,
                   child: Align(
                     alignment: Alignment.centerLeft,
-                    child: Text(
-                      tasklist.tasklistName,
-                      style: TextStyle(
-                        color: Colors.black,
-                        fontSize: 30.0,
-                        fontWeight: FontWeight.bold,
-                      ),
+                    child: Consumer<TasklistTable>(
+                      builder: (context, value, child) {
+                        return Text(
+                          value.getTasklist(tasklistID).tasklistName,
+                          style: TextStyle(
+                            color: Colors.black,
+                            fontSize: 30.0,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        );
+                      },
                     ),
                   ),
                 ),
                 // 百分比
                 Expanded(
                   flex: 1,
-                  child: Row(
-                    children: <Widget>[
-                      Expanded(
-                        flex: 16,
-                        child: LinearProgressIndicator(
-                          value: donePercent,
-                          backgroundColor: Colors.grey.withAlpha(50),
-                          valueColor: AlwaysStoppedAnimation<Color>(
-                              Color(tasklist.color)),
-                        ),
-                      ),
-                      Spacer(),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          (donePercent * 100).round().toString() + "%",
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
+                  child: Consumer<TasklistTable>(
+                    builder: (context, value, child) {
+                      var tasklist = value.getTasklist(tasklistID);
+                      double donePercent = tasklist.count == 0
+                          ? 1
+                          : tasklist.doneCount / tasklist.count;
+
+                      return Row(
+                        children: <Widget>[
+                          Expanded(
+                            flex: 16,
+                            child: LinearProgressIndicator(
+                              value: donePercent,
+                              backgroundColor: Colors.grey.withAlpha(50),
+                              valueColor: AlwaysStoppedAnimation<Color>(
+                                  Color(tasklist.color)),
+                            ),
+                          ),
+                          Spacer(),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              (donePercent * 100).round().toString() + "%",
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      );
+                    },
                   ),
                 ),
                 // 列表项
@@ -156,7 +154,7 @@ class TasklistCard extends StatelessWidget {
                   flex: 8,
                   child: Consumer<TaskTable>(
                     builder: (context, value, child) {
-                      var tasks = value.data[tasklist.tasklistID];
+                      var tasks = value.getTasks(tasklistID);
                       return tasksInfo(tasks);
                     },
                   ),
@@ -167,16 +165,5 @@ class TasklistCard extends StatelessWidget {
         ),
       ),
     );
-    //   ),
-    // );
-    //     } else {
-    //       return Center(
-    //         child: CircularProgressIndicator(
-    //           backgroundColor: Colors.blue,
-    //         ),
-    //       );
-    //     }
-    //   },
-    // );
   }
 }

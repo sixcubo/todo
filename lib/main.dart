@@ -25,8 +25,8 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _children = [
-    //DonePage(),
     TaskPage(),
+    DonePage(),
     //SettingsPage(),
   ];
 
@@ -61,11 +61,10 @@ class _HomePageState extends State<HomePage> {
         fixedColor: Colors.deepPurple,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.calendarCheck), title: Text("")),
+              icon: Icon(FontAwesomeIcons.calendar), label: ''),
           BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.calendar), title: Text("")),
-          BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.slidersH), title: Text("")),
+              icon: Icon(FontAwesomeIcons.calendarCheck), label: ''),
+          //BottomNavigationBarItem(icon: Icon(FontAwesomeIcons.slidersH), label: ''),
         ],
       ),
     );
@@ -74,6 +73,9 @@ class _HomePageState extends State<HomePage> {
 
 class ToDoApp extends StatelessWidget {
   Future<List> query() async {
+    var tasklistTable = TasklistTable();
+    var taskTable = TaskTable();
+    
     await tasklistTable.init();
     await taskTable.init();
     return [tasklistTable, taskTable];
@@ -87,8 +89,8 @@ class ToDoApp extends StatelessWidget {
         if (snapshot.connectionState == ConnectionState.done) {
           return MultiProvider(
             providers: [
-              ChangeNotifierProvider<TasklistTable>.value(value: tasklistTable),
-              ChangeNotifierProvider<TaskTable>.value(value: taskTable),
+              ChangeNotifierProvider<TasklistTable>.value(value: snapshot.data[0]),
+              ChangeNotifierProvider<TaskTable>.value(value: snapshot.data[1]),
             ],
             child: MaterialApp(
               title: 'ToDo',

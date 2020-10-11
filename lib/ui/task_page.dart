@@ -2,15 +2,15 @@ import 'package:flutter/material.dart';
 import 'package:flutter/rendering.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:todo/database/db_provider.dart';
+import 'package:provider/provider.dart';
+import 'package:todo/database/task_table.dart';
 import 'package:todo/database/tasklist_table.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
+import 'package:todo/ui/card_detail.dart';
 import 'package:todo/ui/detail_page.dart';
 import 'package:todo/ui/newlist_page.dart';
-import 'package:todo/ui/widget/list_card.dart';
 import 'package:todo/ui/widget/time_bar.dart';
-import 'package:provider/provider.dart';
 
 ///TaskPage, 可以查看当前未完成的task,
 ///由上方的工具栏[toolBar()], 标题[header()], AddList按钮[addListBtn()], 和任务卡片构成[]
@@ -33,11 +33,6 @@ class _TaskPageState extends State<TaskPage>
 
     super.initState();
   }
-
-  // Future<TasklistTable> query() async {
-  //   await tasklistTable.init();
-  //   return tasklistTable;
-  // }
 
   Widget addListBtn(BuildContext context) {
     return Padding(
@@ -115,31 +110,26 @@ class _TaskPageState extends State<TaskPage>
   Expanded buildCards(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.only(top: 30.0, bottom: 50),
-        child: Builder(
-          builder: (BuildContext context) {
-            return Center(
-              child: Selector<TasklistTable, List<Tasklist>>(
-                shouldRebuild: (previous, next) => false,
-                selector: (context, value) => value.data,
-                builder: (context, res, child) {
-                  return ListView.builder(
-                    physics: const BouncingScrollPhysics(),
-                    padding: EdgeInsets.only(left: 40.0, right: 40.0),
-                    scrollDirection: Axis.horizontal,
-                    itemCount: res.length,
-                    itemBuilder: (context, i) {
-                      return Selector<TasklistTable, Tasklist>(
-                        shouldRebuild: (previous, next) => previous != next,
-                        selector: (context, value) => value.data[i],
-                        builder: (context, res, child) {
-                          return TasklistCard(res);
-                        },
-                      );
-                    },
-                  );
-                },
-              ),
+        padding: EdgeInsets.only(top: 30.0, bottom: 40),
+        // child: Selector<TasklistTable, List<Tasklist>>(
+        //   shouldRebuild: (previous, next) => false,
+        //   selector: (context, value) => value.data,
+        child: Consumer<TasklistTable>(
+          builder: (context, value, child) {
+            var tasklists = value.data;
+            debugPrint('重建详情任务项\n卡片数量:${tasklists.length}');
+            return ListView.builder(
+              physics: const BouncingScrollPhysics(),
+              padding: EdgeInsets.only(left: 40.0, right: 40.0),
+              scrollDirection: Axis.horizontal,
+              itemCount: tasklists.length,
+              itemBuilder: (context, i) {
+                // return Selector<TasklistTable, Tasklist>(
+                //   shouldRebuild: (previous, next) => previous != next,
+                //   selector: (context, value) => value.data[i],
+                //   builder: (context, res, child) {
+                return TasklistCard(tasklists[i].tasklistID);
+              },
             );
           },
         ),
@@ -157,13 +147,16 @@ class _TaskPageState extends State<TaskPage>
         centerTitle: true,
         title: Text(
           'Task',
-          style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
+          style: TextStyle(
+            color: Colors.black,
+            fontSize: 30.0,
+            fontWeight: FontWeight.bold,
+          ),
         ),
       ),
       body: Column(
         children: [
           TimeBar(),
-          //header(context),
           addListBtn(context),
           buildCards(context),
         ],
@@ -174,6 +167,148 @@ class _TaskPageState extends State<TaskPage>
   @override
   void dispose() {
     super.dispose();
+  }
+}
+
+class TasklistCard extends StatelessWidget {
+  final int tasklistID;
+
+  TasklistCard(this.tasklistID, {Key key}) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: () async {
+        await Navigator.of(context).push(
+          PageRouteBuilder(
+            transitionDuration: Duration(milliseconds: 1000),
+            pageBuilder: (
+              BuildContext context,
+              Animation<double> animation,
+              Animation<double> secondaryAnimation,
+            ) {
+              //return DetailPage(tasklistID);
+              return CardDetail(tasklistID);
+            },
+          ),
+        );
+      },
+      child: Card(
+        color: Colors.white,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.all(
+            Radius.circular(20.0),
+          ),
+        ),
+        child: Container(
+          width: MediaQuery.of(context).size.width - 80,
+          padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
+          child: Column(
+            children: [
+              // 标题
+              Expanded(
+                flex: 1,
+                child: Align(
+                  alignment: Alignment.centerLeft,
+                  child: Consumer<TasklistTable>(
+                    builder: (context, value, child) {
+                      return Text(
+                        value.getTasklist(tasklistID).tasklistName,
+                        style: TextStyle(
+                          color: Colors.black,
+                          fontSize: 30.0,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // 百分比
+              Expanded(
+                flex: 1,
+                child: Consumer<TasklistTable>(
+                  builder: (context, value, child) {
+                    var tasklist = value.getTasklist(tasklistID);
+                    double donePercent = tasklist.count == 0
+                        ? 1
+                        : tasklist.doneCount / tasklist.count;
+                    return Row(
+                      children: <Widget>[
+                        Expanded(
+                          flex: 16,
+                          child: LinearProgressIndicator(
+                            value: donePercent,
+                            backgroundColor: Colors.grey.withAlpha(50),
+                            valueColor: AlwaysStoppedAnimation<Color>(
+                                Color(tasklist.color)),
+                          ),
+                        ),
+                        Spacer(),
+                        Expanded(
+                          flex: 2,
+                          child: Text(
+                            (donePercent * 100).round().toString() + "%",
+                            style: TextStyle(
+                                fontSize: 14, fontWeight: FontWeight.bold),
+                          ),
+                        ),
+                      ],
+                    );
+                  },
+                ),
+              ),
+              // 列表项
+              Expanded(
+                flex: 8,
+                child: Consumer<TaskTable>(
+                  builder: (context, value, child) {
+                    var tasks = value.getTasks(tasklistID);
+                    return ListView.builder(
+                      itemExtent: 35,
+                      itemCount: tasks.length,
+                      itemBuilder: (context, i) {
+                        return Row(
+                          children: [
+                            // check框
+                            Expanded(
+                              flex: 1,
+                              child: Icon(
+                                tasks[i].state == 1
+                                    ? FontAwesomeIcons.checkCircle
+                                    : FontAwesomeIcons.circle,
+                                color: tasks[i].state == 1
+                                    ? Colors.black
+                                    : Colors.black26,
+                                size: 17.0,
+                              ),
+                            ),
+                            Spacer(),
+                            Expanded(
+                              flex: 12,
+                              child: Text(
+                                tasks[i].taskName,
+                                style: TextStyle(
+                                  decoration: tasks[i].state == 1
+                                      ? TextDecoration.lineThrough
+                                      : null,
+                                  color: Colors.black,
+                                  fontSize: 20.0,
+                                ),
+                              ),
+                            ),
+                          ],
+                        );
+                      },
+                    );
+                  },
+                ),
+              ),
+            ],
+          ),
+        ),
+      ),
+    );
   }
 }
 

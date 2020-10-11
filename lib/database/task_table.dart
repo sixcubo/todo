@@ -4,32 +4,30 @@ import 'package:todo/database/tasklist_table.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
 
-TaskTable taskTable = TaskTable();
+// TaskTable taskTable = TaskTable();
 
 class TaskTable extends ChangeNotifier {
   static TaskTable _singleton = TaskTable._internal();
   TaskTable._internal();
   factory TaskTable() => _singleton;
 
-  Map<int, List<Task>> data;
+  Map<int, List<Task>> _data;
 
   init() async {
-    debugPrint('初始化TaskTable');
-    data = await queryTaskTable();
+    //debugPrint('初始化TaskTable');
+    _data = await queryTaskTable();
   }
 
-  // List<Task> getTasks(int id) {
-  //     for (var i in data) {
-  //       if ()
-  //     }
-  // }
+  List<Task> getTasks(int id) {
+    return _data[id];
+  }
 
   static Future<Map<int, List<Task>>> queryTaskTable() async {
-    List<Tasklist> listTable = await TasklistTable.queryTasklistTable();
+    List<Tasklist> tasklists = await TasklistTable.queryTasklistTable();
     Map<int, List<Task>> res = {};
 
-    if (listTable.isNotEmpty) {
-      for (var list in listTable) {
+    if (tasklists.isNotEmpty) {
+      for (var list in tasklists) {
         List<Task> tasks = await queryTasksExactListID(list.tasklistID);
         res[list.tasklistID] = tasks;
       }
@@ -39,12 +37,13 @@ class TaskTable extends ChangeNotifier {
 
   static Future<List<Task>> queryTasksExactListID(int listID) async {
     var db = await dbProvider.db;
-
     var sql = """
     SELECT * FROM "taskTable"
     WHERE "taskTable".listID = $listID
     """;
     List<Map<String, dynamic>> res = await db.rawQuery(sql);
+
+    debugPrint('查询任务listID $listID : ${res.toString()}');
 
     return res.map((e) => Task.fromMap(e)).toList();
   }
@@ -77,13 +76,14 @@ class TaskTable extends ChangeNotifier {
       },
     );
 
-    init();
-    notifyListeners();
-    tasklistTable.whenUpdate();
+    update();
+    //tasklistTable.update();
   }
 
   updateState(Task task) async {
-    int doneCount = (await TasklistTable.queryTasklistExactID(task.listID)).doneCount;
+    debugPrint("刷新task: ${task.toString()}");
+    int doneCount =
+        (await TasklistTable.queryTasklistExactID(task.listID)).doneCount;
 
     var db = await dbProvider.db;
     var sql1 = """
@@ -109,9 +109,8 @@ class TaskTable extends ChangeNotifier {
       ]);
     });
 
-    init();
-    notifyListeners();
-    tasklistTable.whenUpdate();
+    update();
+    //tasklistTable.update();
   }
 
   deleteTask(Task task) async {
@@ -137,8 +136,13 @@ class TaskTable extends ChangeNotifier {
       ]);
     });
 
-    init();
+    update();
+    //tasklistTable.update();
+  }
+
+  update() async {
+    debugPrint('task Table通知');
+    await init();
     notifyListeners();
-    tasklistTable.whenUpdate();
   }
 }

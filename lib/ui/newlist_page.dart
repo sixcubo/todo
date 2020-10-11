@@ -72,7 +72,7 @@ class _NewListPageState extends State<NewListPage> {
 
     Tasklist list =
         Tasklist(listNameController.text.toString().trim(), currentColor.value);
-    tasklistTable.insertTasklist(list);
+    //tasklistTable.insertTasklist(list);
 
     setState(() {
       _saving = false;

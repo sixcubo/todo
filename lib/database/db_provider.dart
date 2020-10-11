@@ -16,7 +16,6 @@ class DBProvider {
   DBProvider._internal();
   factory DBProvider() => _singleton;
 
-
   static const _VERSION = 1;
   static const _NAME = "todo.db";
   static Database _database;
@@ -42,7 +41,6 @@ class DBProvider {
     "doneCount" integer
     )
     """;
-
     var createTaskTableSql = """
     CREATE TABLE "TaskTable" (
     "taskID" INTEGER PRIMARY KEY AUTOINCREMENT,

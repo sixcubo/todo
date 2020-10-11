@@ -3,8 +3,8 @@ import 'package:todo/database/db_provider.dart';
 import 'package:todo/model/task_list.dart';
 
 ///此类为单例模式
-///全局唯一变量[tasklistTable]
-TasklistTable tasklistTable = TasklistTable();
+// ///全局唯一变量[tasklistTable]
+// TasklistTable tasklistTable = TasklistTable();
 
 class TasklistTable extends ChangeNotifier {
   static TasklistTable _singleton = new TasklistTable._internal();
@@ -13,26 +13,26 @@ class TasklistTable extends ChangeNotifier {
 
   factory TasklistTable() => _singleton;
 
-  List<Tasklist> data;
+  List<Tasklist> _data;
 
   init() async {
-    debugPrint("初始化ListTable");
-    this.data = await queryTasklistTable();
+    //debugPrint("初始化ListTable");
+    this._data = await queryTasklistTable();
   }
 
+  get data => _data;
+
   Tasklist getTasklist(int id) {
-    for (var i in data) {
+    for (var i in _data) {
       if (id == i.tasklistID) {
         return i;
       }
     }
-
     return null;
   }
 
   static Future<List<Tasklist>> queryTasklistTable() async {
     var db = await dbProvider.db;
-
     var sql = """
     SELECT * FROM "listTable"
     """;
@@ -43,34 +43,31 @@ class TasklistTable extends ChangeNotifier {
 
   static Future<Tasklist> queryTasklistExactID(int id) async {
     var db = await dbProvider.db;
-
     var sql = """
     SELECT * FROM "listTable"
     WHERE listID=?
     """;
     var res = await db.rawQuery(sql, [id]);
 
+    debugPrint('查询列表$id : ${res.toString()}');
+
     return Tasklist.fromMap(res[0]);
   }
 
-  Future<int> insertTasklist(Tasklist list) async {
+  insertTasklist(Tasklist list) async {
     var db = await dbProvider.db;
-
     var sql = """
     INSERT INTO "ListTable" (listID, listName, color, count, doneCount)
     VALUES(NULL, ?, ?, ?, ?)
     """;
-    var res = await db.rawInsert(sql, [
+    await db.rawInsert(sql, [
       list.tasklistName,
       list.color,
       list.count,
       list.doneCount,
     ]);
 
-    init();
-    notifyListeners();
-
-    return res;
+    update();
   }
 
   deleteTasklist(Tasklist list) async {
@@ -80,13 +77,13 @@ class TasklistTable extends ChangeNotifier {
     DELETE FROM "listTable"
     WHERE listID=?
     """;
-    db.rawDelete(sql, [list.tasklistID]);
+    await db.rawDelete(sql, [list.tasklistID]);
 
-    init();
-    notifyListeners();
+    update();
   }
 
-  whenUpdate() {
+  update() {
+    debugPrint('tasklist Table通知');
     init();
     notifyListeners();
   }

@@ -9,10 +9,8 @@ class DonePage extends StatefulWidget {
 
 class _DonePageState extends State<DonePage>
     with SingleTickerProviderStateMixin {
-
-      
   @override
   Widget build(BuildContext context) {
-    return null;
+    return Center(child: Text('空地'));
   }
 }
