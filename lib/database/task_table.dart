@@ -43,7 +43,7 @@ class TaskTable extends ChangeNotifier {
     """;
     List<Map<String, dynamic>> res = await db.rawQuery(sql);
 
-    debugPrint('查询任务listID $listID : ${res.toString()}');
+    //debugPrint('查询任务listID $listID : ${res.toString()}');
 
     return res.map((e) => Task.fromMap(e)).toList();
   }

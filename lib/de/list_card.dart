@@ -8,7 +8,7 @@ import 'package:todo/database/task_table.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
-import 'package:todo/ui/detail_page.dart';
+import 'package:todo/de/detail_page.dart';
 import 'package:provider/provider.dart';
 import 'package:todo/database/tasks_exact_tasklist.dart';
 

@@ -8,7 +8,7 @@ import 'package:todo/database/tasklist_table.dart';
 import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
 import 'package:todo/ui/card_detail.dart';
-import 'package:todo/ui/detail_page.dart';
+import 'package:todo/de/detail_page.dart';
 import 'package:todo/ui/newlist_page.dart';
 import 'package:todo/ui/widget/time_bar.dart';
 
@@ -111,24 +111,20 @@ class _TaskPageState extends State<TaskPage>
     return Expanded(
       child: Container(
         padding: EdgeInsets.only(top: 30.0, bottom: 40),
-        // child: Selector<TasklistTable, List<Tasklist>>(
-        //   shouldRebuild: (previous, next) => false,
-        //   selector: (context, value) => value.data,
-        child: Consumer<TasklistTable>(
+        child: Selector<TasklistTable, List<Tasklist>>(
+          // 仅当tasklists数量改变时, rebuild
+          shouldRebuild: (previous, next) => previous.length != next.length,
+          selector: (ctx, origin) => origin.data,
           builder: (context, value, child) {
-            var tasklists = value.data;
-            debugPrint('重建详情任务项\n卡片数量:${tasklists.length}');
+            //var tasklists = value.data;
+            //debugPrint('重建详情任务项\n卡片数量:${tasklists.length}');
             return ListView.builder(
               physics: const BouncingScrollPhysics(),
               padding: EdgeInsets.only(left: 40.0, right: 40.0),
               scrollDirection: Axis.horizontal,
-              itemCount: tasklists.length,
+              itemCount: value.length,
               itemBuilder: (context, i) {
-                // return Selector<TasklistTable, Tasklist>(
-                //   shouldRebuild: (previous, next) => previous != next,
-                //   selector: (context, value) => value.data[i],
-                //   builder: (context, res, child) {
-                return TasklistCard(tasklists[i].tasklistID);
+                return TasklistCard(value[i].tasklistID);
               },
             );
           },
@@ -210,10 +206,14 @@ class TasklistCard extends StatelessWidget {
                 flex: 1,
                 child: Align(
                   alignment: Alignment.centerLeft,
-                  child: Consumer<TasklistTable>(
+                  child: Selector<TasklistTable, String>(
+                    // 选出 标题
+                    selector: (ctx, origin) =>
+                        origin.getTasklist(tasklistID).tasklistName,
                     builder: (context, value, child) {
+                      //debugPrint('标题${value}');
                       return Text(
-                        value.getTasklist(tasklistID).tasklistName,
+                        value,
                         style: TextStyle(
                           color: Colors.black,
                           fontSize: 30.0,
@@ -227,12 +227,13 @@ class TasklistCard extends StatelessWidget {
               // 百分比
               Expanded(
                 flex: 1,
-                child: Consumer<TasklistTable>(
+                child: Selector<TasklistTable, Tasklist>(
+                  // 选出 tasklist
+                  selector: (ctx, origin) => origin.getTasklist(tasklistID),
                   builder: (context, value, child) {
-                    var tasklist = value.getTasklist(tasklistID);
-                    double donePercent = tasklist.count == 0
-                        ? 1
-                        : tasklist.doneCount / tasklist.count;
+                    //var tasklist = value.getTasklist(tasklistID);
+                    double donePercent =
+                        value.count == 0 ? 1 : value.doneCount / value.count;
                     return Row(
                       children: <Widget>[
                         Expanded(
@@ -241,7 +242,7 @@ class TasklistCard extends StatelessWidget {
                             value: donePercent,
                             backgroundColor: Colors.grey.withAlpha(50),
                             valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(tasklist.color)),
+                                Color(value.color)),
                           ),
                         ),
                         Spacer(),
@@ -261,12 +262,13 @@ class TasklistCard extends StatelessWidget {
               // 列表项
               Expanded(
                 flex: 8,
-                child: Consumer<TaskTable>(
+                child: Selector<TaskTable, List<Task>>(
+                  // 选出 tasks
+                  selector: (ctx, origin) => origin.getTasks(tasklistID),
                   builder: (context, value, child) {
-                    var tasks = value.getTasks(tasklistID);
                     return ListView.builder(
                       itemExtent: 35,
-                      itemCount: tasks.length,
+                      itemCount: value.length,
                       itemBuilder: (context, i) {
                         return Row(
                           children: [
@@ -274,10 +276,10 @@ class TasklistCard extends StatelessWidget {
                             Expanded(
                               flex: 1,
                               child: Icon(
-                                tasks[i].state == 1
+                                value[i].state == 1
                                     ? FontAwesomeIcons.checkCircle
                                     : FontAwesomeIcons.circle,
-                                color: tasks[i].state == 1
+                                color: value[i].state == 1
                                     ? Colors.black
                                     : Colors.black26,
                                 size: 17.0,
@@ -287,9 +289,9 @@ class TasklistCard extends StatelessWidget {
                             Expanded(
                               flex: 12,
                               child: Text(
-                                tasks[i].taskName,
+                                value[i].taskName,
                                 style: TextStyle(
-                                  decoration: tasks[i].state == 1
+                                  decoration: value[i].state == 1
                                       ? TextDecoration.lineThrough
                                       : null,
                                   color: Colors.black,

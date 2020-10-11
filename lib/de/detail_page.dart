@@ -114,7 +114,7 @@ class DetailPage extends StatelessWidget {
             itemBuilder: (BuildContext ctxt, int i) {
               // 任务项
               return Slidable(
-                delegate: SlidableBehindDelegate(),
+                //delegate: SlidableBehindDelegate(),
                 actionExtentRatio: 0.25,
                 child: GestureDetector(
                   // 点击添加或取消对号

@@ -49,7 +49,7 @@ class TasklistTable extends ChangeNotifier {
     """;
     var res = await db.rawQuery(sql, [id]);
 
-    debugPrint('查询列表$id : ${res.toString()}');
+    //debugPrint('查询列表$id : ${res.toString()}');
 
     return Tasklist.fromMap(res[0]);
   }
@@ -82,9 +82,9 @@ class TasklistTable extends ChangeNotifier {
     update();
   }
 
-  update() {
+  update() async {
     debugPrint('tasklist Table通知');
-    init();
+    await init();
     notifyListeners();
   }
 }
