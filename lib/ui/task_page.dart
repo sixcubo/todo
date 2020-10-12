@@ -11,6 +11,8 @@ import 'package:todo/ui/card_detail.dart';
 import 'package:todo/de/detail_page.dart';
 import 'package:todo/ui/newlist_page.dart';
 import 'package:todo/ui/widget/time_bar.dart';
+import 'package:todo/util/fixed_scrollphysics.dart';
+import 'package:todo/util/changeable_bg.dart';
 
 ///TaskPage, 可以查看当前未完成的task,
 ///由上方的工具栏[toolBar()], 标题[header()], AddList按钮[addListBtn()], 和任务卡片构成[]
@@ -24,12 +26,20 @@ class TaskPage extends StatefulWidget {
 
 class _TaskPageState extends State<TaskPage>
     with SingleTickerProviderStateMixin {
+  ScrollController scrollCtrler;
+  ColorTween colorTween;
+  ChangeableBG<Color> colorBG;
+
   @override
   initState() {
     SystemChrome.setPreferredOrientations([
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+
+    scrollCtrler = new ScrollController();
+    colorTween = new ColorTween();
+    colorBG = new ChangeableBG<Color>();
 
     super.initState();
   }
@@ -118,10 +128,27 @@ class _TaskPageState extends State<TaskPage>
           builder: (context, value, child) {
             //var tasklists = value.data;
             //debugPrint('重建详情任务项\n卡片数量:${tasklists.length}');
+            whenScroll() {
+              double index = scrollCtrler.offset /
+                  scrollCtrler.position.maxScrollExtent *
+                  (value.length - 1);
+
+              colorTween.begin =
+                  Color(value[(index.floor()) % value.length].color);
+              colorTween.end =
+                  Color(value[(index.floor() + 1) % value.length].color);
+              colorBG.value = colorTween.transform(index % 1);
+
+              debugPrint('${index.floor() + 1}');
+            }
+
             return ListView.builder(
-              physics: const BouncingScrollPhysics(),
-              padding: EdgeInsets.only(left: 40.0, right: 40.0),
+              controller: scrollCtrler
+                ..removeListener(whenScroll)
+                ..addListener(whenScroll),
+              physics: FixedScrollPhysics(value),
               scrollDirection: Axis.horizontal,
+              padding: EdgeInsets.only(left: 40.0, right: 40.0),
               itemCount: value.length,
               itemBuilder: (context, i) {
                 return TasklistCard(value[i].tasklistID);
@@ -135,37 +162,55 @@ class _TaskPageState extends State<TaskPage>
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      backgroundColor: Colors.transparent,
-      appBar: AppBar(
-        elevation: 0,
-        backgroundColor: Colors.transparent,
-        centerTitle: true,
-        title: Text(
-          'Task',
-          style: TextStyle(
-            color: Colors.black,
-            fontSize: 30.0,
-            fontWeight: FontWeight.bold,
+    //debugPrint('重建');
+    return Stack(
+      children: [
+        ChangeNotifierProvider<ChangeableBG>.value(
+          value: colorBG,
+          builder: (context, child) {
+            return Container(
+              decoration: BoxDecoration(
+                color: Provider.of<ChangeableBG>(context).value,
+              ),
+            );
+          },
+        ),
+        Scaffold(
+          backgroundColor: Colors.transparent,
+          appBar: AppBar(
+            elevation: 0,
+            backgroundColor: Colors.transparent,
+            centerTitle: true,
+            title: Text(
+              'Task Card',
+              style: TextStyle(
+                color: Colors.black,
+                fontSize: 30.0,
+                fontWeight: FontWeight.bold,
+              ),
+            ),
+          ),
+          body: Column(
+            children: [
+              TimeBar(),
+              addListBtn(context),
+              buildCards(context),
+            ],
           ),
         ),
-      ),
-      body: Column(
-        children: [
-          TimeBar(),
-          addListBtn(context),
-          buildCards(context),
-        ],
-      ),
+      ],
     );
   }
 
   @override
   void dispose() {
+    scrollCtrler.dispose();
+
     super.dispose();
   }
 }
 
+// 任务卡片
 class TasklistCard extends StatelessWidget {
   final int tasklistID;
 
@@ -192,9 +237,7 @@ class TasklistCard extends StatelessWidget {
       child: Card(
         color: Colors.white,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(
-            Radius.circular(20.0),
-          ),
+          borderRadius: BorderRadius.all(Radius.circular(20.0)),
         ),
         child: Container(
           width: MediaQuery.of(context).size.width - 80,

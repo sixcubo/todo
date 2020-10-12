@@ -7,7 +7,7 @@ import 'package:todo/database/task_table.dart';
 import 'package:todo/database/tasklist_table.dart';
 import 'package:todo/database/tasks_exact_tasklist.dart';
 
-import 'package:todo/ui/page_done.dart';
+import 'package:todo/ui/done_page.dart';
 import 'package:todo/ui/task_page.dart';
 
 import 'package:provider/provider.dart';
