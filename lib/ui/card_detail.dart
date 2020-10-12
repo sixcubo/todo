@@ -71,11 +71,11 @@ class CardDetail extends StatelessWidget {
               ),
             ),
           ),
+          // 列表项
           Expanded(
             flex: 10,
             child: Consumer2<TasklistTable, TaskTable>(
               builder: (context, value1, value2, child) {
-                //var tasklist = value1.getTasklist(tasklistID);
                 debugPrint('重建详情任务项');
                 var tasks = value2.getTasks(tasklistID);
                 return ListView.builder(
@@ -83,71 +83,75 @@ class CardDetail extends StatelessWidget {
                   itemExtent: 66,
                   itemCount: tasks.length,
                   itemBuilder: (context, i) {
-                    return Slidable(
-                      //controller: SlidableController(),
-                      actionPane: SlidableStrechActionPane(),
-                      secondaryActions: [
-                        IconSlideAction(
-                          caption: 'Delete',
-                          color: Colors.red,
-                          icon: Icons.delete,
-                          onTap: () async {
-                            await value2.deleteTask(tasks[i]);
-                            await value1.update();
-                          },
-                        ),
-                      ],
-
-                      child: Container(
-                        height: 66,
-                        margin: EdgeInsets.fromLTRB(8, 2, 8, 2),
-                        foregroundDecoration: BoxDecoration(
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(10.0),
-                          ),
-                        ),
-                        decoration: BoxDecoration(
-                          color: Colors.white,
-                          borderRadius: BorderRadius.all(
-                            Radius.circular(10.0),
-                          ),
-                        ),
-                        child: Row(
-                          children: [
-                            Spacer(),
-                            Expanded(
-                              flex: 3,
-                              child: GestureDetector(
-                                onTap: () async {
-                                  await value2.updateState(tasks[i]);
-                                  await value1.update();
-                                },
-                                child: Icon(
-                                  tasks[i].state == 1
-                                      ? FontAwesomeIcons.checkCircle
-                                      : FontAwesomeIcons.circle,
-                                  color: tasks[i].state == 1
-                                      ? Colors.black
-                                      : Colors.black26,
-                                  size: 20.0,
-                                ),
+                    return Container(
+                      margin: EdgeInsets.fromLTRB(8, 2, 8, 2),
+                      child: Slidable(
+                        actionPane: SlidableStrechActionPane(),
+                        secondaryActions: [
+                          Container(
+                            margin: EdgeInsets.only(left: 4),
+                            clipBehavior: Clip.antiAlias,
+                            decoration: BoxDecoration(
+                              color: Colors.red,
+                              borderRadius: BorderRadius.all(
+                                Radius.circular(10.0),
                               ),
                             ),
-                            Spacer(),
-                            Expanded(
-                              flex: 30,
-                              child: Text(
-                                tasks[i].taskName,
-                                style: TextStyle(
-                                  decoration: tasks[i].state == 1
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: Colors.black,
-                                  fontSize: 20.0,
+                            child: IconSlideAction(
+                              color: Colors.transparent,
+                              icon: Icons.delete,
+                              onTap: () async {
+                                await value2.deleteTask(tasks[i]);
+                                await value1.update();
+                              },
+                            ),
+                          ),
+                        ],
+                        child: Container(
+                          height: 66,
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.all(
+                              Radius.circular(10.0),
+                            ),
+                          ),
+                          child: Row(
+                            children: [
+                              Spacer(),
+                              Expanded(
+                                flex: 3,
+                                child: GestureDetector(
+                                  onTap: () async {
+                                    await value2.updateState(tasks[i]);
+                                    await value1.update();
+                                  },
+                                  child: Icon(
+                                    tasks[i].state == 1
+                                        ? FontAwesomeIcons.checkCircle
+                                        : FontAwesomeIcons.circle,
+                                    color: tasks[i].state == 1
+                                        ? Colors.black
+                                        : Colors.black26,
+                                    size: 20.0,
+                                  ),
                                 ),
                               ),
-                            ),
-                          ],
+                              Spacer(),
+                              Expanded(
+                                flex: 30,
+                                child: Text(
+                                  tasks[i].taskName,
+                                  style: TextStyle(
+                                    decoration: tasks[i].state == 1
+                                        ? TextDecoration.lineThrough
+                                        : null,
+                                    color: Colors.black,
+                                    fontSize: 20.0,
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
                         ),
                       ),
                     );
