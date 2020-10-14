@@ -4,8 +4,11 @@ import 'package:modal_progress_hud/modal_progress_hud.dart';
 
 import 'package:todo/database/db_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:todo/database/task_table.dart';
 import 'package:todo/database/tasklist_table.dart';
+import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
+import 'package:provider/provider.dart';
 
 ///NewListPage, 创建新任务列表的页面.
 ///包括标题[header()], 输入框[inputField()], 颜色选择器[colorPicker()], 提交按钮[submintBtn()].
@@ -19,7 +22,7 @@ class NewListPage extends StatefulWidget {
 
 class _NewListPageState extends State<NewListPage> {
   TextEditingController listNameController = new TextEditingController();
-  final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
+  //final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
   // DBManager dbManager = new DBManager();
 
@@ -36,7 +39,7 @@ class _NewListPageState extends State<NewListPage> {
 
   @override
   void dispose() {
-    _scaffoldKey.currentState?.dispose();
+    //_scaffoldKey.currentState?.dispose();
     //_connectivitySubscription?.cancel();
     super.dispose();
   }
@@ -54,32 +57,16 @@ class _NewListPageState extends State<NewListPage> {
     //     });
   }
 
-  // TODO: 未用
-  void showInSnackBar(String value) {
-    _scaffoldKey.currentState?.removeCurrentSnackBar();
+  // // TODO: 未用
+  // void showInSnackBar(String value) {
+  //   _scaffoldKey.currentState?.removeCurrentSnackBar();
 
-    _scaffoldKey.currentState?.showSnackBar(new SnackBar(
-      content: new Text(value, textAlign: TextAlign.center),
-      backgroundColor: currentColor,
-      duration: Duration(seconds: 3),
-    ));
-  }
-
-  _submit() async {
-    setState(() {
-      _saving = true;
-    });
-
-    Tasklist list =
-        Tasklist(listNameController.text.toString().trim(), currentColor.value);
-    //tasklistTable.insertTasklist(list);
-
-    setState(() {
-      _saving = false;
-    });
-
-    Navigator.of(context).pop();
-  }
+  //   _scaffoldKey.currentState?.showSnackBar(new SnackBar(
+  //     content: new Text(value, textAlign: TextAlign.center),
+  //     backgroundColor: currentColor,
+  //     duration: Duration(seconds: 3),
+  //   ));
+  // }
 
   Container _getToolbar(BuildContext context) {
     return Container(
@@ -219,7 +206,25 @@ class _NewListPageState extends State<NewListPage> {
             color: Colors.blue,
             elevation: 4.0,
             splashColor: Colors.deepPurple,
-            onPressed: _submit,
+            onPressed: () async {
+              setState(() {
+                _saving = true;
+              });
+
+              Tasklist list = Tasklist(
+                  listNameController.text.toString().trim(),
+                  currentColor.value);
+
+              await Provider.of<TasklistTable>(context,listen: false).insertTasklist(list);
+              await Provider.of<TaskTable>(context,listen: false).update();
+              // tasklistTable.insertTasklist(list);
+
+              setState(() {
+                _saving = false;
+              });
+
+              Navigator.of(context).pop();
+            },
           ),
         ],
       ),
@@ -229,7 +234,7 @@ class _NewListPageState extends State<NewListPage> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      key: _scaffoldKey,
+      //key: _scaffoldKey,
       body: ModalProgressHUD(
         child: Stack(
           children: [

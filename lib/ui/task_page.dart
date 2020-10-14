@@ -13,6 +13,7 @@ import 'package:todo/ui/newlist_page.dart';
 import 'package:todo/ui/widget/time_bar.dart';
 import 'package:todo/util/fixed_scrollphysics.dart';
 import 'package:todo/util/changeable_bg.dart';
+import 'package:animated_text_kit/animated_text_kit.dart';
 
 ///TaskPage, 可以查看当前未完成的task,
 ///由上方的工具栏[toolBar()], 标题[header()], AddList按钮[addListBtn()], 和任务卡片构成[]
@@ -54,14 +55,16 @@ class _TaskPageState extends State<TaskPage>
             width: 50.0,
             height: 50.0,
             decoration: BoxDecoration(
-                border: Border.all(color: Colors.black38),
-                borderRadius: BorderRadius.all(Radius.circular(7.0))),
+              border: Border.all(width: 2, color: Colors.black54),
+              borderRadius: BorderRadius.all(Radius.circular(10.0)),
+            ),
             child: IconButton(
               icon: Icon(Icons.add),
               iconSize: 30.0,
               onPressed: () async {
                 await Navigator.of(context).push(
                   PageRouteBuilder(
+                    transitionDuration: Duration(milliseconds: 2000),
                     pageBuilder: (_, __, ___) => NewListPage(),
                     // 过度动画
                     transitionsBuilder:
@@ -74,33 +77,16 @@ class _TaskPageState extends State<TaskPage>
                         CurvedAnimation(
                           parent: animation,
                           curve: Interval(
+                            0.00,
                             0.50,
-                            1.00,
-                            curve: Curves.linear,
+                            curve: Curves.bounceOut,
                           ),
                         ),
                       ),
-                      child: ScaleTransition(
-                        scale: Tween<double>(
-                          begin: 0.0,
-                          end: 1.0,
-                        ).animate(
-                          CurvedAnimation(
-                            parent: animation,
-                            curve: Interval(
-                              0.00,
-                              0.50,
-                              curve: Curves.linear,
-                            ),
-                          ),
-                        ),
-                        child: child,
-                      ),
+                      child: child,
                     ),
                   ),
                 );
-                // TODO: 更好的刷新页面的方法
-                //query();
               },
             ),
           ),
@@ -109,7 +95,11 @@ class _TaskPageState extends State<TaskPage>
             padding: EdgeInsets.only(top: 10),
             child: Text(
               'Add List',
-              style: TextStyle(color: Colors.black45),
+              style: TextStyle(
+                fontSize: 15,
+                color: Colors.black54,
+                fontWeight: FontWeight.bold,
+              ),
             ),
           ),
         ],
@@ -117,10 +107,10 @@ class _TaskPageState extends State<TaskPage>
     );
   }
 
-  Expanded buildCards(BuildContext context) {
+  Expanded _buildCards(BuildContext context) {
     return Expanded(
       child: Container(
-        padding: EdgeInsets.only(top: 30.0, bottom: 40),
+        margin: EdgeInsets.only(top: 10, bottom: 25),
         child: Selector<TasklistTable, List<Tasklist>>(
           // 仅当tasklists数量改变时, rebuild
           shouldRebuild: (previous, next) => previous.length != next.length,
@@ -138,8 +128,6 @@ class _TaskPageState extends State<TaskPage>
               colorTween.end =
                   Color(value[(index.floor() + 1) % value.length].color);
               colorBG.value = colorTween.transform(index % 1);
-
-              debugPrint('${index.floor() + 1}');
             }
 
             return ListView.builder(
@@ -194,7 +182,7 @@ class _TaskPageState extends State<TaskPage>
             children: [
               TimeBar(),
               addListBtn(context),
-              buildCards(context),
+              _buildCards(context),
             ],
           ),
         ),
@@ -210,7 +198,7 @@ class _TaskPageState extends State<TaskPage>
   }
 }
 
-// 任务卡片
+// 任务卡片类
 class TasklistCard extends StatelessWidget {
   final int tasklistID;
 
@@ -218,140 +206,162 @@ class TasklistCard extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return GestureDetector(
+    return InkWell(
+      borderRadius: BorderRadius.all(Radius.circular(20.0)),
       onTap: () async {
         await Navigator.of(context).push(
           PageRouteBuilder(
-            transitionDuration: Duration(milliseconds: 1000),
-            pageBuilder: (
-              BuildContext context,
-              Animation<double> animation,
-              Animation<double> secondaryAnimation,
-            ) {
-              //return DetailPage(tasklistID);
-              return CardDetail(tasklistID);
+            transitionDuration: const Duration(milliseconds: 1000),
+            pageBuilder: (_, animation, __) {
+              return FadeTransition(
+                opacity: animation,
+                child: CardDetail(tasklistID),
+              );
             },
           ),
         );
       },
-      child: Card(
-        color: Colors.white,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.all(Radius.circular(20.0)),
-        ),
-        child: Container(
-          width: MediaQuery.of(context).size.width - 80,
-          padding: EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
-          child: Column(
-            children: [
-              // 标题
-              Expanded(
-                flex: 1,
-                child: Align(
-                  alignment: Alignment.centerLeft,
-                  child: Selector<TasklistTable, String>(
-                    // 选出 标题
-                    selector: (ctx, origin) =>
-                        origin.getTasklist(tasklistID).tasklistName,
-                    builder: (context, value, child) {
-                      //debugPrint('标题${value}');
-                      return Text(
-                        value,
-                        style: TextStyle(
-                          color: Colors.black,
-                          fontSize: 30.0,
-                          fontWeight: FontWeight.bold,
-                        ),
-                      );
-                    },
-                  ),
-                ),
+      child: Stack(
+        children: [
+          Hero(
+            tag: 'hero_background_$tasklistID',
+            child: Card(
+              margin: EdgeInsets.symmetric(horizontal: 4, vertical: 15),
+              color: Color.fromARGB(190, 255, 255, 230),
+              elevation: 5,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.all(Radius.circular(20.0)),
               ),
-              // 百分比
-              Expanded(
-                flex: 1,
-                child: Selector<TasklistTable, Tasklist>(
-                  // 选出 tasklist
-                  selector: (ctx, origin) => origin.getTasklist(tasklistID),
-                  builder: (context, value, child) {
-                    //var tasklist = value.getTasklist(tasklistID);
-                    double donePercent =
-                        value.count == 0 ? 1 : value.doneCount / value.count;
-                    return Row(
-                      children: <Widget>[
-                        Expanded(
-                          flex: 16,
-                          child: LinearProgressIndicator(
-                            value: donePercent,
-                            backgroundColor: Colors.grey.withAlpha(50),
-                            valueColor: AlwaysStoppedAnimation<Color>(
-                                Color(value.color)),
-                          ),
-                        ),
-                        Spacer(),
-                        Expanded(
-                          flex: 2,
-                          child: Text(
-                            (donePercent * 100).round().toString() + "%",
+              child: Container(
+                width: MediaQuery.of(context).size.width - 80,
+                padding:
+                    EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
+              ),
+            ),
+          ),
+          Card(
+            //  margin: EdgeInsets.all(10.0),
+            color: Colors.transparent,
+            elevation: 0,
+            child: Container(
+              width: MediaQuery.of(context).size.width - 80,
+              padding:
+                  EdgeInsets.only(left: 20, right: 20, top: 10, bottom: 20),
+              child: Column(
+                children: [
+                  // 标题
+                  Expanded(
+                    flex: 1,
+                    child: Align(
+                      alignment: Alignment.centerLeft,
+                      child: Selector<TasklistTable, String>(
+                        // 选出 标题
+                        selector: (ctx, origin) =>
+                            origin.getTasklist(tasklistID).tasklistName,
+                        builder: (context, value, child) {
+                          //debugPrint('标题${value}');
+                          return Text(
+                            value,
                             style: TextStyle(
-                                fontSize: 14, fontWeight: FontWeight.bold),
-                          ),
-                        ),
-                      ],
-                    );
-                  },
-                ),
-              ),
-              // 列表项
-              Expanded(
-                flex: 8,
-                child: Selector<TaskTable, List<Task>>(
-                  // 选出 tasks
-                  selector: (ctx, origin) => origin.getTasks(tasklistID),
-                  builder: (context, value, child) {
-                    return ListView.builder(
-                      itemExtent: 35,
-                      itemCount: value.length,
-                      itemBuilder: (context, i) {
+                              color: Colors.black,
+                              fontSize: 30.0,
+                              fontWeight: FontWeight.bold,
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                  // 百分比
+                  Expanded(
+                    flex: 1,
+                    child: Selector<TasklistTable, Tasklist>(
+                      // 选出 tasklist
+                      selector: (ctx, origin) => origin.getTasklist(tasklistID),
+                      builder: (context, value, child) {
+                        //var tasklist = value.getTasklist(tasklistID);
+                        double donePercent = value.count == 0
+                            ? 1
+                            : value.doneCount / value.count;
                         return Row(
-                          children: [
-                            // check框
+                          children: <Widget>[
                             Expanded(
-                              flex: 1,
-                              child: Icon(
-                                value[i].state == 1
-                                    ? FontAwesomeIcons.checkCircle
-                                    : FontAwesomeIcons.circle,
-                                color: value[i].state == 1
-                                    ? Colors.black
-                                    : Colors.black26,
-                                size: 17.0,
+                              flex: 15,
+                              child: LinearProgressIndicator(
+                                value: donePercent,
+                                backgroundColor: Colors.grey.withAlpha(50),
+                                valueColor: AlwaysStoppedAnimation<Color>(
+                                    Color(value.color)),
                               ),
                             ),
                             Spacer(),
                             Expanded(
-                              flex: 12,
+                              flex: 3,
                               child: Text(
-                                value[i].taskName,
+                                value.doneCount.toString() +
+                                    " / " +
+                                    value.count.toString(),
                                 style: TextStyle(
-                                  decoration: value[i].state == 1
-                                      ? TextDecoration.lineThrough
-                                      : null,
-                                  color: Colors.black,
-                                  fontSize: 20.0,
-                                ),
+                                    fontSize: 14, fontWeight: FontWeight.bold),
                               ),
                             ),
                           ],
                         );
                       },
-                    );
-                  },
-                ),
+                    ),
+                  ),
+                  // 列表项
+                  Expanded(
+                    flex: 8,
+                    child: Selector<TaskTable, List<Task>>(
+                      // 选出 tasks
+                      selector: (ctx, origin) => origin.getTasks(tasklistID),
+                      builder: (context, value, child) {
+                        return ListView.builder(
+                          itemExtent: 35,
+                          itemCount: value.length,
+                          itemBuilder: (context, i) {
+                            return Row(
+                              children: [
+                                // check框
+                                Expanded(
+                                  flex: 1,
+                                  child: Icon(
+                                    value[i].state == 1
+                                        ? FontAwesomeIcons.checkCircle
+                                        : FontAwesomeIcons.circle,
+                                    color: value[i].state == 1
+                                        ? Colors.black
+                                        : Colors.black26,
+                                    size: 17.0,
+                                  ),
+                                ),
+                                Spacer(),
+                                Expanded(
+                                  flex: 12,
+                                  child: Text(
+                                    value[i].taskName,
+                                    style: TextStyle(
+                                      decoration: value[i].state == 1
+                                          ? TextDecoration.lineThrough
+                                          : null,
+                                      color: Colors.black,
+                                      fontSize: 20.0,
+                                    ),
+                                  ),
+                                ),
+                              ],
+                            );
+                          },
+                        );
+                      },
+                    ),
+                  ),
+                ],
               ),
-            ],
+            ),
           ),
-        ),
+        ],
       ),
     );
   }

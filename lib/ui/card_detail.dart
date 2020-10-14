@@ -13,8 +13,10 @@ class CardDetail extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final size = MediaQuery.of(context).size;
+
     return Scaffold(
-      backgroundColor: Colors.amberAccent,
+      //backgroundColor: Colors.amberAccent,
       appBar: AppBar(
         centerTitle: true,
         title: Selector<TasklistTable, String>(
@@ -28,174 +30,209 @@ class CardDetail extends StatelessWidget {
             );
           },
         ),
-        backgroundColor: Colors.amber,
+        //backgroundColor: Colors.amber,
         elevation: 0,
       ),
-      body: Column(
+      body: Stack(
         children: [
-          // 百分比条
-          Expanded(
-            flex: 1,
-            child: Container(
-              padding: EdgeInsets.only(left: 20, right: 10),
+          Positioned(
+            top: -size.width / 2,
+            right: -size.width / 3,
+            width: size.width * 1,
+            height: size.width * 1,
+            child: Hero(
+              tag: 'hero_background_$tasklistID',
               child: Consumer<TasklistTable>(
-                builder: (context, value, child) {
-                  var tasklist = value.getTasklist(tasklistID);
-                  return Row(
-                    children: [
-                      Expanded(
-                        flex: 16,
-                        child: LinearProgressIndicator(
-                          value: tasklist.count == 0
-                              ? 1
-                              : tasklist.doneCount / tasklist.count,
-                          backgroundColor: Colors.grey.withAlpha(50),
-                          valueColor:
-                              AlwaysStoppedAnimation<Color>(Colors.black54),
-                        ),
-                      ),
-                      Spacer(),
-                      Expanded(
-                        flex: 2,
-                        child: Text(
-                          tasklist.doneCount.toString() +
-                              " / " +
-                              tasklist.count.toString(),
-                          style: TextStyle(
-                              fontSize: 14, fontWeight: FontWeight.bold),
-                        ),
-                      ),
-                    ],
-                  );
-                },
+                builder: (context, value, child) => Container(
+                  decoration: BoxDecoration(
+                    color: Color(value.getTasklist(tasklistID).color),
+                    shape: BoxShape.circle,
+                  ),
+                ),
               ),
             ),
           ),
-          // 列表项
-          Expanded(
-            flex: 10,
-            child: Consumer2<TasklistTable, TaskTable>(
-              builder: (context, value1, value2, child) {
-                debugPrint('重建详情任务项');
-                var tasks = value2.getTasks(tasklistID);
-                return ListView.builder(
-                  physics: const BouncingScrollPhysics(),
-                  itemExtent: 66,
-                  itemCount: tasks.length,
-                  itemBuilder: (context, i) {
-                    return Container(
-                      margin: EdgeInsets.fromLTRB(8, 2, 8, 2),
-                      child: Slidable(
-                        actionPane: SlidableStrechActionPane(),
-                        secondaryActions: [
-                          Container(
-                            margin: EdgeInsets.only(left: 4),
-                            clipBehavior: Clip.antiAlias,
-                            decoration: BoxDecoration(
-                              color: Colors.red,
-                              borderRadius: BorderRadius.all(
-                                Radius.circular(10.0),
-                              ),
+          Column(
+            children: [
+              // 百分比条
+              Expanded(
+                flex: 1,
+                child: Container(
+                  padding: EdgeInsets.only(left: 20, right: 10),
+                  child: Consumer<TasklistTable>(
+                    builder: (context, value, child) {
+                      var tasklist = value.getTasklist(tasklistID);
+                      return Row(
+                        children: [
+                          Expanded(
+                            flex: 16,
+                            child: LinearProgressIndicator(
+                              value: tasklist.count == 0
+                                  ? 1
+                                  : tasklist.doneCount / tasklist.count,
+                              backgroundColor: Colors.grey.withAlpha(50),
+                              valueColor:
+                                  AlwaysStoppedAnimation<Color>(Colors.black54),
                             ),
-                            child: IconSlideAction(
-                              color: Colors.transparent,
-                              icon: Icons.delete,
-                              onTap: () async {
-                                await value2.deleteTask(tasks[i]);
-                                await value1.update();
-                              },
+                          ),
+                          Spacer(),
+                          Expanded(
+                            flex: 2,
+                            child: Text(
+                              tasklist.doneCount.toString() +
+                                  " / " +
+                                  tasklist.count.toString(),
+                              style: TextStyle(
+                                  fontSize: 14, fontWeight: FontWeight.bold),
                             ),
                           ),
                         ],
-                        child: Container(
-                          height: 66,
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.all(
-                              Radius.circular(10.0),
-                            ),
-                          ),
-                          child: Row(
-                            children: [
-                              Spacer(),
-                              Expanded(
-                                flex: 3,
-                                child: GestureDetector(
-                                  onTap: () async {
-                                    await value2.updateState(tasks[i]);
-                                    await value1.update();
-                                  },
-                                  child: Icon(
-                                    tasks[i].state == 1
-                                        ? FontAwesomeIcons.checkCircle
-                                        : FontAwesomeIcons.circle,
-                                    color: tasks[i].state == 1
-                                        ? Colors.black
-                                        : Colors.black26,
-                                    size: 20.0,
+                      );
+                    },
+                  ),
+                ),
+              ),
+              // 列表项
+              Expanded(
+                flex: 10,
+                child: Consumer2<TasklistTable, TaskTable>(
+                  builder: (context, value1, value2, child) {
+                    debugPrint('重建详情任务项');
+                    var tasks = value2.getTasks(tasklistID);
+                    return ListView.builder(
+                      physics: const BouncingScrollPhysics(),
+                      itemExtent: 66,
+                      itemCount: tasks.length,
+                      itemBuilder: (context, i) {
+                        return Container(
+                          margin: EdgeInsets.fromLTRB(8, 2, 8, 2),
+                          child: Slidable(
+                            actionPane: SlidableStrechActionPane(),
+                            secondaryActions: [
+                              Container(
+                                margin: EdgeInsets.only(left: 4),
+                                clipBehavior: Clip.antiAlias,
+                                decoration: BoxDecoration(
+                                  boxShadow: [
+                                    BoxShadow(
+                                      color: Colors.black26,
+                                      offset: Offset(0, 3),
+                                      blurRadius: 3,
+                                    )
+                                  ],
+                                  color: Colors.red,
+                                  borderRadius: BorderRadius.all(
+                                    Radius.circular(10.0),
                                   ),
                                 ),
-                              ),
-                              Spacer(),
-                              Expanded(
-                                flex: 30,
-                                child: Text(
-                                  tasks[i].taskName,
-                                  style: TextStyle(
-                                    decoration: tasks[i].state == 1
-                                        ? TextDecoration.lineThrough
-                                        : null,
-                                    color: Colors.black,
-                                    fontSize: 20.0,
-                                  ),
+                                child: IconSlideAction(
+                                  color: Colors.transparent,
+                                  icon: Icons.delete,
+                                  onTap: () async {
+                                    await value2.deleteTask(tasks[i]);
+                                    await value1.update();
+                                  },
                                 ),
                               ),
                             ],
+                            child: Container(
+                              height: 66,
+                              decoration: BoxDecoration(
+                                boxShadow: [
+                                  BoxShadow(
+                                    color: Colors.black26,
+                                    offset: Offset(0, 3),
+                                    blurRadius: 3,
+                                  )
+                                ],
+                                color: Colors.white,
+                                borderRadius: BorderRadius.all(
+                                  Radius.circular(10.0),
+                                ),
+                              ),
+                              child: Row(
+                                children: [
+                                  Spacer(),
+                                  Expanded(
+                                    flex: 3,
+                                    child: GestureDetector(
+                                      onTap: () async {
+                                        await value2.updateState(tasks[i]);
+                                        await value1.update();
+                                      },
+                                      child: Icon(
+                                        tasks[i].state == 1
+                                            ? FontAwesomeIcons.checkCircle
+                                            : FontAwesomeIcons.circle,
+                                        color: tasks[i].state == 1
+                                            ? Colors.black
+                                            : Colors.black26,
+                                        size: 20.0,
+                                      ),
+                                    ),
+                                  ),
+                                  Spacer(),
+                                  Expanded(
+                                    flex: 30,
+                                    child: Text(
+                                      tasks[i].taskName,
+                                      style: TextStyle(
+                                        decoration: tasks[i].state == 1
+                                            ? TextDecoration.lineThrough
+                                            : null,
+                                        color: Colors.black,
+                                        fontSize: 20.0,
+                                      ),
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
                           ),
-                        ),
-                      ),
-                    );
+                        );
 
-                    //  GestureDetector(
-                    //   onTap: () async {
-                    //     await value2.updateState(tasks[i]);
-                    //     await value1.update();
-                    //   },
-                    //   child: Row(
-                    //     children: [
-                    //       Expanded(
-                    //         flex: 1,
-                    //         child: Icon(
-                    //           tasks[i].state == 1
-                    //               ? FontAwesomeIcons.checkCircle
-                    //               : FontAwesomeIcons.circle,
-                    //           color: tasks[i].state == 1
-                    //               ? Colors.black
-                    //               : Colors.black26,
-                    //           size: 17.0,
-                    //         ),
-                    //       ),
-                    //       Spacer(),
-                    //       Expanded(
-                    //         flex: 12,
-                    //         child: Text(
-                    //           tasks[i].taskName,
-                    //           style: TextStyle(
-                    //             decoration: tasks[i].state == 1
-                    //                 ? TextDecoration.lineThrough
-                    //                 : null,
-                    //             color: Colors.black,
-                    //             fontSize: 20.0,
-                    //           ),
-                    //         ),
-                    //       ),
-                    //     ],
-                    //   ),
-                    // );
+                        //  GestureDetector(
+                        //   onTap: () async {
+                        //     await value2.updateState(tasks[i]);
+                        //     await value1.update();
+                        //   },
+                        //   child: Row(
+                        //     children: [
+                        //       Expanded(
+                        //         flex: 1,
+                        //         child: Icon(
+                        //           tasks[i].state == 1
+                        //               ? FontAwesomeIcons.checkCircle
+                        //               : FontAwesomeIcons.circle,
+                        //           color: tasks[i].state == 1
+                        //               ? Colors.black
+                        //               : Colors.black26,
+                        //           size: 17.0,
+                        //         ),
+                        //       ),
+                        //       Spacer(),
+                        //       Expanded(
+                        //         flex: 12,
+                        //         child: Text(
+                        //           tasks[i].taskName,
+                        //           style: TextStyle(
+                        //             decoration: tasks[i].state == 1
+                        //                 ? TextDecoration.lineThrough
+                        //                 : null,
+                        //             color: Colors.black,
+                        //             fontSize: 20.0,
+                        //           ),
+                        //         ),
+                        //       ),
+                        //     ],
+                        //   ),
+                        // );
+                      },
+                    );
                   },
-                );
-              },
-            ),
+                ),
+              ),
+            ],
           ),
         ],
       ),
