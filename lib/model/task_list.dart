@@ -1,21 +1,22 @@
+import 'package:flutter/material.dart';
 
-class TaskList {
-  final int listID;
-  final String listName;
+class Tasklist extends ChangeNotifier{
+  final int tasklistID;
+  final String tasklistName;
   final int color;
   final int count;
   final int doneCount;
 
-  TaskList(
-    this.listName,
+  Tasklist(
+    this.tasklistName,
     this.color, [
     this.count = 0,
     this.doneCount = 0,
-    this.listID,
+    this.tasklistID,
   ]);
 
-  static TaskList fromMap(Map<String, dynamic> list) {
-    return TaskList(
+  static Tasklist fromMap(Map<String, dynamic> list) {
+    return Tasklist(
       list["listName"],
       list["color"],
       list["count"],
@@ -26,8 +27,8 @@ class TaskList {
 
   Map<String, dynamic> toMap() {
     return {
-      "listID": listID,
-      "listName": listName,
+      "listID": tasklistID,
+      "listName": tasklistName,
       "color": color,
       "count": count,
       "doneCount": doneCount,
@@ -35,6 +36,6 @@ class TaskList {
   }
 
   String toString() {
-    return "TaskList: $listID, $listName, $color, $count, $doneCount";
+    return "TaskList: $tasklistID, $tasklistName, $color, $count, $doneCount";
   }
 }

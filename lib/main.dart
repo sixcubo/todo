@@ -1,9 +1,16 @@
+import 'dart:async';
+
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:todo/database/task_table.dart';
+import 'package:todo/database/tasklist_table.dart';
+import 'package:todo/database/tasks_exact_tasklist.dart';
 
-import 'package:todo/ui/page_done.dart';
-import 'package:todo/ui/page_task.dart';
+import 'package:todo/ui/done_page.dart';
+import 'package:todo/ui/task_page.dart';
+
+import 'package:provider/provider.dart';
 
 ///主界面, 包括底部导航栏和当前页面, 共有三个页面可以切换, 页面位于[_children].
 
@@ -18,15 +25,10 @@ class _HomePageState extends State<HomePage> {
   int _currentIndex = 0;
 
   final List<Widget> _children = [
-    //DonePage(),
     TaskPage(),
+    DonePage(),
     //SettingsPage(),
   ];
-
-  @override
-  void dispose() {
-    super.dispose();
-  }
 
   @override
   void initState() {
@@ -36,6 +38,11 @@ class _HomePageState extends State<HomePage> {
       DeviceOrientation.portraitUp,
       DeviceOrientation.portraitDown,
     ]);
+  }
+
+  @override
+  void dispose() {
+    super.dispose();
   }
 
   void onTabTapped(int index) {
@@ -54,11 +61,10 @@ class _HomePageState extends State<HomePage> {
         fixedColor: Colors.deepPurple,
         items: <BottomNavigationBarItem>[
           BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.calendarCheck), title: Text("")),
+              icon: Icon(FontAwesomeIcons.calendar), label: ''),
           BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.calendar), title: Text("")),
-          BottomNavigationBarItem(
-              icon: Icon(FontAwesomeIcons.slidersH), title: Text("")),
+              icon: Icon(FontAwesomeIcons.calendarCheck), label: ''),
+          //BottomNavigationBarItem(icon: Icon(FontAwesomeIcons.slidersH), label: ''),
         ],
       ),
     );
@@ -66,12 +72,40 @@ class _HomePageState extends State<HomePage> {
 }
 
 class ToDoApp extends StatelessWidget {
+  Future<List> query() async {
+    var tasklistTable = TasklistTable();
+    var taskTable = TaskTable();
+    
+    await tasklistTable.init();
+    await taskTable.init();
+    return [tasklistTable, taskTable];
+  }
+
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      title: 'ToDo',
-      home: HomePage(),
-      theme: ThemeData(primarySwatch: Colors.blue),
+    return FutureBuilder(
+      future: query(),
+      builder: (context, snapshot) {
+        if (snapshot.connectionState == ConnectionState.done) {
+          return MultiProvider(
+            providers: [
+              ChangeNotifierProvider<TasklistTable>.value(value: snapshot.data[0]),
+              ChangeNotifierProvider<TaskTable>.value(value: snapshot.data[1]),
+            ],
+            child: MaterialApp(
+              title: 'ToDo',
+              home: HomePage(),
+              theme: ThemeData(primarySwatch: Colors.blue),
+            ),
+          );
+        } else {
+          return Center(
+            child: CircularProgressIndicator(
+              backgroundColor: Colors.blue,
+            ),
+          );
+        }
+      },
     );
   }
 }
