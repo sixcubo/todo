@@ -5,18 +5,57 @@ import 'package:todo/database/tasklist_table.dart';
 import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
+import 'package:todo/model/task.dart';
 
 class CardDetail extends StatelessWidget {
   final int tasklistID;
+  CardDetail(this.tasklistID, {Key key}) : super(key: key);
 
-  const CardDetail(this.tasklistID, {Key key}) : super(key: key);
+  final TextEditingController _textCtrler = TextEditingController();
+
+  Future<bool> showAddDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Add task"),
+          content: TextField(
+            controller: _textCtrler,
+            autofocus: true,
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.assignment_turned_in_outlined),
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                _textCtrler.clear();
+                Navigator.of(context).pop();
+              }, //关闭对话框
+            ),
+            Consumer2<TasklistTable, TaskTable>(
+              builder: (context, value, value2, child) => FlatButton(
+                child: Text("Add"),
+                onPressed: () async {
+                  var task = Task(_textCtrler.text.trim(), tasklistID);
+                  await value2.insertTask(task);
+                  await value.update();
+                  _textCtrler.clear();
+                  Navigator.of(context).pop(true); //关闭对话框
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
-    final size = MediaQuery.of(context).size;
-
+    final _size = MediaQuery.of(context).size;
     return Scaffold(
-      //backgroundColor: Colors.amberAccent,
       appBar: AppBar(
         centerTitle: true,
         title: Selector<TasklistTable, String>(
@@ -36,10 +75,10 @@ class CardDetail extends StatelessWidget {
       body: Stack(
         children: [
           Positioned(
-            top: -size.width / 2,
-            right: -size.width / 3,
-            width: size.width * 1,
-            height: size.width * 1,
+            top: -_size.width / 2,
+            right: -_size.width / 3,
+            width: _size.width * 1,
+            height: _size.width * 1,
             child: Hero(
               tag: 'hero_background_$tasklistID',
               child: Consumer<TasklistTable>(
@@ -190,43 +229,6 @@ class CardDetail extends StatelessWidget {
                             ),
                           ),
                         );
-
-                        //  GestureDetector(
-                        //   onTap: () async {
-                        //     await value2.updateState(tasks[i]);
-                        //     await value1.update();
-                        //   },
-                        //   child: Row(
-                        //     children: [
-                        //       Expanded(
-                        //         flex: 1,
-                        //         child: Icon(
-                        //           tasks[i].state == 1
-                        //               ? FontAwesomeIcons.checkCircle
-                        //               : FontAwesomeIcons.circle,
-                        //           color: tasks[i].state == 1
-                        //               ? Colors.black
-                        //               : Colors.black26,
-                        //           size: 17.0,
-                        //         ),
-                        //       ),
-                        //       Spacer(),
-                        //       Expanded(
-                        //         flex: 12,
-                        //         child: Text(
-                        //           tasks[i].taskName,
-                        //           style: TextStyle(
-                        //             decoration: tasks[i].state == 1
-                        //                 ? TextDecoration.lineThrough
-                        //                 : null,
-                        //             color: Colors.black,
-                        //             fontSize: 20.0,
-                        //           ),
-                        //         ),
-                        //       ),
-                        //     ],
-                        //   ),
-                        // );
                       },
                     );
                   },
@@ -236,41 +238,12 @@ class CardDetail extends StatelessWidget {
           ),
         ],
       ),
+      floatingActionButton: FloatingActionButton(
+        child: Icon(Icons.add),
+        onPressed: () async {
+          showAddDialog(context);
+        },
+      ),
     );
   }
 }
-
-// class TaskSlide extends StatelessWidget {
-//   @override
-//   Widget build(BuildContext context) {
-//     return Card(
-//       shape: RoundedRectangleBorder(
-//         borderRadius: BorderRadius.all(
-//           Radius.circular(15.0),
-//         ),
-//       ),
-//       child: Slidable(
-//         actionPane: null,
-//         child: Row(
-//           children: [
-//             Expanded(
-//               flex: 1,
-//               child: Icon(
-//                 tasks[i].state == 1
-//                     ? FontAwesomeIcons.checkCircle
-//                     : FontAwesomeIcons.circle,
-//                 color: tasks[i].state == 1 ? Colors.black : Colors.black26,
-//                 size: 17.0,
-//               ),
-//             ),
-//             Spacer(),
-//             Expanded(
-//               flex: 10,
-//               child: null,
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }

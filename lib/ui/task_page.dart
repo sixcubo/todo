@@ -156,9 +156,21 @@ class _TaskPageState extends State<TaskPage>
         ChangeNotifierProvider<ChangeableBG>.value(
           value: colorBG,
           builder: (context, child) {
+            Color _color = Provider.of<ChangeableBG>(context).value;
+
             return Container(
               decoration: BoxDecoration(
-                color: Provider.of<ChangeableBG>(context).value,
+                gradient: LinearGradient(
+                  colors: [
+                    Color.lerp(_color, Color(0xFF050505), 0.25),
+                    _color,
+                    
+                    //Color.lerp(_color, Color(0xFF101010), 1),
+                  ],
+                  begin: Alignment.bottomCenter,
+                  end: Alignment.topCenter,
+                ),
+                //color: Provider.of<ChangeableBG>(context).value,
               ),
             );
           },
@@ -227,7 +239,7 @@ class TasklistCard extends StatelessWidget {
             tag: 'hero_background_$tasklistID',
             child: Card(
               margin: EdgeInsets.symmetric(horizontal: 4, vertical: 15),
-              color: Color.fromARGB(190, 255, 255, 230),
+              color: Color.fromARGB(230, 255, 255, 255),
               elevation: 5,
               shape: RoundedRectangleBorder(
                 borderRadius: BorderRadius.all(Radius.circular(20.0)),
