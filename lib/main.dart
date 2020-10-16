@@ -3,14 +3,11 @@ import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
+import 'package:provider/provider.dart';
 import 'package:todo/database/task_table.dart';
 import 'package:todo/database/tasklist_table.dart';
-import 'package:todo/database/tasks_exact_tasklist.dart';
-
 import 'package:todo/ui/done_page.dart';
 import 'package:todo/ui/task_page.dart';
-
-import 'package:provider/provider.dart';
 
 ///主界面, 包括底部导航栏和当前页面, 共有三个页面可以切换, 页面位于[_children].
 

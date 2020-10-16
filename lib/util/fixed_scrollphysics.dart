@@ -1,25 +1,25 @@
 import 'package:flutter/material.dart';
-import 'package:todo/model/task_list.dart';
 
 class FixedScrollPhysics extends ScrollPhysics {
-  final List<Tasklist> tasklists;
+  final int _length;
 
-  FixedScrollPhysics(this.tasklists, {ScrollPhysics parent})
-      : super(parent: parent);
+  FixedScrollPhysics(this._length, {ScrollPhysics parent})
+      : super(parent: parent) {
+        debugPrint('创建物理效果 $_length');
+      }
 
   @override
   FixedScrollPhysics applyTo(ScrollPhysics ancestor) {
-    return FixedScrollPhysics(tasklists, parent: buildParent(ancestor));
+    return FixedScrollPhysics(_length, parent: buildParent(ancestor));
   }
 
   double _getPage(ScrollPosition position) {
     return position.pixels /
-        (position.maxScrollExtent / (tasklists.length.toDouble() - 1));
+        (position.maxScrollExtent / (_length.toDouble() - 1));
   }
 
   double _getPixels(ScrollPosition position, double page) {
-    return page *
-        (position.maxScrollExtent / (tasklists.length.toDouble() - 1));
+    return page * (position.maxScrollExtent / (_length.toDouble() - 1));
   }
 
   double _getTargetPixels(

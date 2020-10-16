@@ -19,7 +19,12 @@ class TaskTable extends ChangeNotifier {
   }
 
   List<Task> getTasks(int id) {
-    return _data[id];
+    //debugPrint('返回列表$id');
+
+    ///创建tasklist时会通知卡片列表更新, 以增加新的卡片, 构建卡片需要调用此函数获取卡片的
+    ///任务信息, 而此时[_data]还没有更新, 所以[tasks]为null, 为避免异常作此处理.
+    var tasks = _data[id];
+    return tasks ?? [];
   }
 
   static Future<Map<int, List<Task>>> queryTaskTable() async {
@@ -76,7 +81,7 @@ class TaskTable extends ChangeNotifier {
       },
     );
 
-    update();
+    await update();
     //tasklistTable.update();
   }
 
@@ -109,7 +114,7 @@ class TaskTable extends ChangeNotifier {
       ]);
     });
 
-    update();
+    await update();
     //tasklistTable.update();
   }
 
@@ -136,7 +141,7 @@ class TaskTable extends ChangeNotifier {
       ]);
     });
 
-    update();
+    await update();
     //tasklistTable.update();
   }
 

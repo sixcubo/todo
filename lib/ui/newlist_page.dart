@@ -1,14 +1,10 @@
 import 'package:flutter/cupertino.dart';
 import 'package:flutter/material.dart';
-import 'package:modal_progress_hud/modal_progress_hud.dart';
-
-import 'package:todo/database/db_provider.dart';
 import 'package:flutter_colorpicker/flutter_colorpicker.dart';
+import 'package:provider/provider.dart';
 import 'package:todo/database/task_table.dart';
 import 'package:todo/database/tasklist_table.dart';
-import 'package:todo/model/task.dart';
 import 'package:todo/model/task_list.dart';
-import 'package:provider/provider.dart';
 
 ///NewListPage, 创建新任务列表的页面.
 ///包括标题[header()], 输入框[inputField()], 颜色选择器[colorPicker()], 提交按钮[submintBtn()].
@@ -22,16 +18,11 @@ class NewListPage extends StatefulWidget {
 
 class _NewListPageState extends State<NewListPage> {
   TextEditingController listNameController = new TextEditingController();
-  //final GlobalKey<ScaffoldState> _scaffoldKey = new GlobalKey<ScaffoldState>();
 
-  // DBManager dbManager = new DBManager();
-
-  bool _saving = false;
+  //bool _saving = false;
 
   Color currentColor = Color(0xff6633ff);
   Color pickerColor = Color(0xff6633ff);
-
-  //ValueChanged<Color> onColorChanged;
 
   changeColor(Color color) {
     setState(() => pickerColor = color);
@@ -39,34 +30,14 @@ class _NewListPageState extends State<NewListPage> {
 
   @override
   void dispose() {
-    //_scaffoldKey.currentState?.dispose();
-    //_connectivitySubscription?.cancel();
+    listNameController.dispose();
     super.dispose();
   }
 
   @override
   void initState() {
     super.initState();
-
-    // initConnectivity();
-    // _connectivitySubscription =
-    //     _connectivity.onConnectivityChanged.listen((ConnectivityResult result) {
-    //       setState(() {
-    //         _connectionStatus = result.toString();
-    //       });
-    //     });
   }
-
-  // // TODO: 未用
-  // void showInSnackBar(String value) {
-  //   _scaffoldKey.currentState?.removeCurrentSnackBar();
-
-  //   _scaffoldKey.currentState?.showSnackBar(new SnackBar(
-  //     content: new Text(value, textAlign: TextAlign.center),
-  //     backgroundColor: currentColor,
-  //     duration: Duration(seconds: 3),
-  //   ));
-  // }
 
   Container _getToolbar(BuildContext context) {
     return Container(
@@ -194,40 +165,35 @@ class _NewListPageState extends State<NewListPage> {
   }
 
   Widget submitBtn(BuildContext context) {
-    return Padding(
-      padding: EdgeInsets.only(top: 50.0),
-      child: Column(
-        children: <Widget>[
-          RaisedButton(
-            child: const Text(
-              'Add',
-              style: TextStyle(color: Colors.white),
-            ),
-            color: Colors.blue,
-            elevation: 4.0,
-            splashColor: Colors.deepPurple,
-            onPressed: () async {
-              setState(() {
-                _saving = true;
-              });
+    return Consumer2<TasklistTable, TaskTable>(
+      builder: (context, value, value2, child) {
+        return Padding(
+          padding: EdgeInsets.only(top: 50.0),
+          child: Column(
+            children: <Widget>[
+              RaisedButton(
+                child: const Text(
+                  'Add',
+                  style: TextStyle(color: Colors.white),
+                ),
+                color: Colors.blue,
+                elevation: 4.0,
+                splashColor: Colors.deepPurple,
+                onPressed: () async {
+                  Tasklist list = Tasklist(
+                      listNameController.text.toString().trim(),
+                      currentColor.value);
 
-              Tasklist list = Tasklist(
-                  listNameController.text.toString().trim(),
-                  currentColor.value);
+                  await value.insertTasklist(list);
+                  await value2.update();
 
-              await Provider.of<TasklistTable>(context,listen: false).insertTasklist(list);
-              await Provider.of<TaskTable>(context,listen: false).update();
-              // tasklistTable.insertTasklist(list);
-
-              setState(() {
-                _saving = false;
-              });
-
-              Navigator.of(context).pop();
-            },
+                  Navigator.of(context).pop();
+                },
+              ),
+            ],
           ),
-        ],
-      ),
+        );
+      },
     );
   }
 
@@ -235,27 +201,29 @@ class _NewListPageState extends State<NewListPage> {
   Widget build(BuildContext context) {
     return Scaffold(
       //key: _scaffoldKey,
-      body: ModalProgressHUD(
-        child: Stack(
-          children: [
-            _getToolbar(context),
-            Container(
-              child: Column(
-                children: [
-                  // 标题: NewList
-                  header(context),
-                  // 输入框
-                  inputField(context),
-                  // 颜色选择器
-                  colorPicker(context),
-                  // 按钮
-                  submitBtn(context),
-                ],
-              ),
+      body:
+          // ModalProgressHUD(
+          //   child:
+          Stack(
+        children: [
+          _getToolbar(context),
+          Container(
+            child: Column(
+              children: [
+                // 标题: NewList
+                header(context),
+                // 输入框
+                inputField(context),
+                // 颜色选择器
+                colorPicker(context),
+                // 按钮
+                submitBtn(context),
+              ],
             ),
-          ],
-        ),
-        inAsyncCall: _saving,
+          ),
+        ],
+        // ),
+        //inAsyncCall: _saving,
       ),
     );
   }

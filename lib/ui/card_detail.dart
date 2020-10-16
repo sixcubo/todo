@@ -7,6 +7,8 @@ import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:todo/model/task.dart';
 
+enum TaskCardSettings { edit_color, delete }
+
 class CardDetail extends StatelessWidget {
   final int tasklistID;
   CardDetail(this.tasklistID, {Key key}) : super(key: key);
@@ -52,15 +54,61 @@ class CardDetail extends StatelessWidget {
     );
   }
 
+  // TODO:
+  Future<bool> showEditNameDialog(BuildContext context) {
+    return null;
+  }
+
+  // TODO:
+  Future<bool> showEditColorDialog(BuildContext context) {
+    return null;
+  }
+
+  Future<bool> showDeleteDialog(BuildContext context) {
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Delete Tasklist"),
+          content: Text('Delete this Tasklist?'),
+          actions: [
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            Consumer2<TasklistTable, TaskTable>(
+              builder: (context, value, value2, child) => FlatButton(
+                child: Text("Yes"),
+                onPressed: () async {
+                  ///完成此回调的操作后, 详情页(CardDetail类)中的Consumer也会收到通知,
+                  ///并完成更新, 而此时此详情页所依赖的tasklist已经被删除, 
+                  ///因此Consumer/Selector中的代码使用操作符 ?. 和 ?? 防止null访问异常.
+                  await value.deleteTasklist(tasklistID);
+                  debugPrint('delete over');
+                  Navigator.of(context).pop(true);
+                  Navigator.of(context).pop(true);
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final _size = MediaQuery.of(context).size;
     return Scaffold(
       appBar: AppBar(
+        elevation: 0,
         centerTitle: true,
         title: Selector<TasklistTable, String>(
-          selector: (context, origin) =>
-              origin.getTasklist(tasklistID).tasklistName,
+          selector: (context, origin) {
+            return origin.getTasklist(tasklistID)?.tasklistName ?? "";
+          },
           builder: (context, value, child) {
             debugPrint('更新详情标题');
             return Text(
@@ -69,8 +117,37 @@ class CardDetail extends StatelessWidget {
             );
           },
         ),
-        //backgroundColor: Colors.amber,
-        elevation: 0,
+        actions: [
+          PopupMenuButton(
+            icon: Icon(
+              Icons.more_vert,
+              color: Colors.white,
+            ),
+            itemBuilder: (context) {
+              return <PopupMenuEntry<TaskCardSettings>>[
+                PopupMenuItem(
+                  child: Text("Edit Color"),
+                  value: TaskCardSettings.edit_color,
+                ),
+                PopupMenuItem(
+                  child: Text("Delete"),
+                  value: TaskCardSettings.delete,
+                ),
+              ];
+            },
+            onSelected: (setting) {
+              switch (setting) {
+                case TaskCardSettings.edit_color:
+                  debugPrint("edit color clicked");
+                  break;
+                case TaskCardSettings.delete:
+                  debugPrint("delete clicked");
+                  showDeleteDialog(context);
+                  break;
+              }
+            },
+          ),
+        ],
       ),
       body: Stack(
         children: [
@@ -84,7 +161,7 @@ class CardDetail extends StatelessWidget {
               child: Consumer<TasklistTable>(
                 builder: (context, value, child) => Container(
                   decoration: BoxDecoration(
-                    color: Color(value.getTasklist(tasklistID).color),
+                    color: Color((value.getTasklist(tasklistID)?.color) ?? 0),
                     shape: BoxShape.circle,
                   ),
                 ),
@@ -101,32 +178,35 @@ class CardDetail extends StatelessWidget {
                   child: Consumer<TasklistTable>(
                     builder: (context, value, child) {
                       var tasklist = value.getTasklist(tasklistID);
-                      return Row(
-                        children: [
-                          Expanded(
-                            flex: 16,
-                            child: LinearProgressIndicator(
-                              value: tasklist.count == 0
-                                  ? 1
-                                  : tasklist.doneCount / tasklist.count,
-                              backgroundColor: Colors.grey.withAlpha(50),
-                              valueColor:
-                                  AlwaysStoppedAnimation<Color>(Colors.black54),
-                            ),
-                          ),
-                          Spacer(),
-                          Expanded(
-                            flex: 2,
-                            child: Text(
-                              tasklist.doneCount.toString() +
-                                  " / " +
-                                  tasklist.count.toString(),
-                              style: TextStyle(
-                                  fontSize: 14, fontWeight: FontWeight.bold),
-                            ),
-                          ),
-                        ],
-                      );
+                      return tasklist != null
+                          ? Row(
+                              children: [
+                                Expanded(
+                                  flex: 16,
+                                  child: LinearProgressIndicator(
+                                    value: tasklist.count == 0
+                                        ? 1
+                                        : tasklist.doneCount / tasklist.count,
+                                    backgroundColor: Colors.grey.withAlpha(50),
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.black54),
+                                  ),
+                                ),
+                                Spacer(),
+                                Expanded(
+                                  flex: 2,
+                                  child: Text(
+                                    tasklist.doneCount.toString() +
+                                        " / " +
+                                        tasklist.count.toString(),
+                                    style: TextStyle(
+                                        fontSize: 14,
+                                        fontWeight: FontWeight.bold),
+                                  ),
+                                ),
+                              ],
+                            )
+                          : Container();
                     },
                   ),
                 ),
