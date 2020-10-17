@@ -9,6 +9,7 @@ import 'package:todo/model/task_list.dart';
 ///NewListPage, 创建新任务列表的页面.
 ///包括标题[header()], 输入框[inputField()], 颜色选择器[colorPicker()], 提交按钮[submintBtn()].
 
+// TODO: 重构
 class NewListPage extends StatefulWidget {
   NewListPage({Key key}) : super(key: key);
 
@@ -102,14 +103,21 @@ class _NewListPageState extends State<NewListPage> {
             context: context,
             builder: (BuildContext context) {
               return AlertDialog(
-                title: const Text('Pick a color!'),
+                title: const Text('Pick a color'),
                 content: SingleChildScrollView(
                   child: ColorPicker(
-                    pickerColor: pickerColor,
+                    pickerColor: currentColor,
                     onColorChanged: changeColor,
-                    //enableLabel: true,
-                    colorPickerWidth: 1000.0,
+                    colorPickerWidth: 300.0,
                     pickerAreaHeightPercent: 0.7,
+                    enableAlpha: true,
+                    displayThumbColor: true,
+                    showLabel: true,
+                    paletteType: PaletteType.hsv,
+                    pickerAreaBorderRadius: const BorderRadius.only(
+                      topLeft: const Radius.circular(2.0),
+                      topRight: const Radius.circular(2.0),
+                    ),
                   ),
                 ),
                 actions: <Widget>[

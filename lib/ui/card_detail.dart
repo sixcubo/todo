@@ -6,8 +6,9 @@ import 'package:provider/provider.dart';
 import 'package:font_awesome_flutter/font_awesome_flutter.dart';
 import 'package:flutter_slidable/flutter_slidable.dart';
 import 'package:todo/model/task.dart';
+import 'package:flutter_colorpicker/flutter_colorpicker.dart';
 
-enum TaskCardSettings { edit_color, delete }
+enum TaskCardSettings { edit_name, edit_color, delete }
 
 class CardDetail extends StatelessWidget {
   final int tasklistID;
@@ -54,14 +55,95 @@ class CardDetail extends StatelessWidget {
     );
   }
 
-  // TODO:
   Future<bool> showEditNameDialog(BuildContext context) {
-    return null;
+    return showDialog(
+      context: context,
+      builder: (context) {
+        return AlertDialog(
+          title: Text("Edit tasklist name"),
+          content: TextField(
+            controller: _textCtrler,
+            autofocus: true,
+            decoration: InputDecoration(
+              prefixIcon: Icon(Icons.drive_file_rename_outline),
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text("Cancel"),
+              onPressed: () {
+                _textCtrler.clear();
+                Navigator.of(context).pop();
+              },
+            ),
+            Consumer<TasklistTable>(
+              builder: (context, value, child) => FlatButton(
+                child: Text("Rename"),
+                onPressed: () async {
+                  var name = _textCtrler.text.trim();
+                  await value.updateName(tasklistID, name);
+                  _textCtrler.clear();
+                  Navigator.of(context).pop(true); //关闭对话框
+                },
+              ),
+            ),
+          ],
+        );
+      },
+    );
   }
 
-  // TODO:
   Future<bool> showEditColorDialog(BuildContext context) {
-    return null;
+    //Color currentColor = Color(0xff6633ff);
+    Color pickerColor = Color(0xff6633ff);
+
+    changeColor(Color color) {
+      pickerColor = color;
+    }
+
+    return showDialog(
+      context: context,
+      builder: (BuildContext context) {
+        return AlertDialog(
+          title: const Text('Pick a color'),
+          content: SingleChildScrollView(
+            child: ColorPicker(
+              pickerColor: pickerColor,
+              onColorChanged: changeColor,
+              colorPickerWidth: 300.0,
+              pickerAreaHeightPercent: 0.7,
+              enableAlpha: true,
+              displayThumbColor: true,
+              showLabel: true,
+              paletteType: PaletteType.hsv,
+              pickerAreaBorderRadius: const BorderRadius.only(
+                topLeft: const Radius.circular(5.0),
+                topRight: const Radius.circular(5.0),
+              ),
+            ),
+          ),
+          actions: <Widget>[
+            FlatButton(
+              child: Text('Cancel'),
+              onPressed: () {
+                Navigator.of(context).pop();
+              },
+            ),
+            Consumer<TasklistTable>(
+              builder: (context, value, child) {
+                return FlatButton(
+                  child: Text('Got it'),
+                  onPressed: () async {
+                    await value.updateColor(tasklistID, pickerColor.value);
+                    Navigator.of(context).pop();
+                  },
+                );
+              },
+            ),
+          ],
+        );
+      },
+    );
   }
 
   Future<bool> showDeleteDialog(BuildContext context) {
@@ -69,8 +151,8 @@ class CardDetail extends StatelessWidget {
       context: context,
       builder: (context) {
         return AlertDialog(
-          title: Text("Delete Tasklist"),
-          content: Text('Delete this Tasklist?'),
+          title: Text("Delete tasklist"),
+          content: Text('Delete this tasklist?'),
           actions: [
             FlatButton(
               child: Text("Cancel"),
@@ -83,7 +165,7 @@ class CardDetail extends StatelessWidget {
                 child: Text("Yes"),
                 onPressed: () async {
                   ///完成此回调的操作后, 详情页(CardDetail类)中的Consumer也会收到通知,
-                  ///并完成更新, 而此时此详情页所依赖的tasklist已经被删除, 
+                  ///并完成更新, 而此时此详情页所依赖的tasklist已经被删除,
                   ///因此Consumer/Selector中的代码使用操作符 ?. 和 ?? 防止null访问异常.
                   await value.deleteTasklist(tasklistID);
                   debugPrint('delete over');
@@ -110,7 +192,7 @@ class CardDetail extends StatelessWidget {
             return origin.getTasklist(tasklistID)?.tasklistName ?? "";
           },
           builder: (context, value, child) {
-            debugPrint('更新详情标题');
+            //debugPrint('更新详情标题');
             return Text(
               value,
               style: TextStyle(fontSize: 30.0, fontWeight: FontWeight.bold),
@@ -126,6 +208,10 @@ class CardDetail extends StatelessWidget {
             itemBuilder: (context) {
               return <PopupMenuEntry<TaskCardSettings>>[
                 PopupMenuItem(
+                  child: Text("Edit Name"),
+                  value: TaskCardSettings.edit_name,
+                ),
+                PopupMenuItem(
                   child: Text("Edit Color"),
                   value: TaskCardSettings.edit_color,
                 ),
@@ -137,8 +223,13 @@ class CardDetail extends StatelessWidget {
             },
             onSelected: (setting) {
               switch (setting) {
+                case TaskCardSettings.edit_name:
+                  debugPrint("edit name clicked");
+                  showEditNameDialog(context);
+                  break;
                 case TaskCardSettings.edit_color:
                   debugPrint("edit color clicked");
+                  showEditColorDialog(context);
                   break;
                 case TaskCardSettings.delete:
                   debugPrint("delete clicked");

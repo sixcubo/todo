@@ -70,14 +70,38 @@ class TasklistTable extends ChangeNotifier {
     await update();
   }
 
+  updateName(int id, String name) async {
+    var db = await dbProvider.db;
+    var sql = """
+    UPDATE "ListTable"
+    SET listName=?
+    WHERE listID=?
+    """;
+    await db.rawUpdate(sql, [name, id]);
+
+    await update();
+  }
+
+  updateColor(int id, int color) async {
+    var db = await dbProvider.db;
+    var sql = """
+    UPDATE "ListTable"
+    SET color=?
+    WHERE listID=?
+    """;
+    await db.rawUpdate(sql, [color, id]);
+
+    await update();
+  }
+
   deleteTasklist(int id) async {
     var db = await dbProvider.db;
     var sql = """
-    DELETE FROM "listTable"
+    DELETE FROM "ListTable"
     WHERE listID=?
     """;
     var sql2 = """
-    DELETE FROM "taskTable"
+    DELETE FROM "ListTable"
     WHERE listID=?
     """;
 

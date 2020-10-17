@@ -109,11 +109,9 @@ class _TaskPageState extends State<TaskPage>
       child: Container(
         margin: EdgeInsets.only(top: 10, bottom: 25),
         child: Selector<TasklistTable, List<Tasklist>>(
-          // 仅当tasklists数量改变时, rebuild
-          shouldRebuild: (previous, next) => previous.length != next.length,
           selector: (ctx, origin) => origin.data,
           builder: (context, value, child) {
-            debugPrint('重建卡片列表\n卡片数量:${value.length}');
+            //debugPrint('重建卡片列表\n卡片数量:${value.length}');
             void whenScroll() {
               double index = scrollCtrler.offset /
                   scrollCtrler.position.maxScrollExtent *
@@ -129,8 +127,9 @@ class _TaskPageState extends State<TaskPage>
               controller: scrollCtrler
                 ..removeListener(whenScroll)
                 ..addListener(whenScroll),
-              //TODO:反复调用构造函数
-              //physics: //FixedScrollPhysics(value.length),
+              // TODO: 已知bug: 重复创建, 传入的value.length不对
+              // physics: FixedScrollPhysics(value.length),
+              physics: const BouncingScrollPhysics(),
               scrollDirection: Axis.horizontal,
               padding: EdgeInsets.only(left: 40.0, right: 40.0),
               itemCount: value.length,
@@ -151,17 +150,17 @@ class _TaskPageState extends State<TaskPage>
         ChangeNotifierProvider<ChangeableBG>.value(
           value: colorBG,
           builder: (context, child) {
-            Color _color =
-                Provider.of<ChangeableBG>(context).value ?? Colors.white;
+            Color _color = Provider.of<ChangeableBG>(context).value;
             return Container(
               decoration: BoxDecoration(
                 gradient: LinearGradient(
                   colors: [
-                    Color.lerp(_color, Color(0xFF050505), 0.25),
-                    _color,
+                    Color.lerp(_color, Color(0xFF100500), 0.2),
+                    Color.lerp(_color, Color(0xFF100500), 0.35),
+                    // Color.lerp(_color, Color(0xFF050505), 0.3),
                   ],
-                  begin: Alignment.bottomCenter,
-                  end: Alignment.topCenter,
+                  begin: Alignment.topCenter,
+                  end: Alignment.bottomCenter,
                 ),
               ),
             );
